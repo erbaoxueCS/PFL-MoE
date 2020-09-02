@@ -68,11 +68,11 @@ def cifar_iid(dataset, num_users):
 
 def cifar_noniid(dataset, no_participants, alpha=0.9):
     """
-        Input: Number of participants and alpha (param for distribution)
-        Output: A list of indices denoting data in CIFAR training set.
-        Requires: cifar_classes, a preprocessed class-indice dictionary.
-        Sample Method: take a uniformly sampled 10-dimension vector as parameters for
-        dirichlet distribution to sample number of images in each class.
+    Input: Number of participants and alpha (param for distribution)
+    Output: A list of indices denoting data in CIFAR training set.
+    Requires: cifar_classes, a preprocessed class-indice dictionary.
+    Sample Method: take a uniformly sampled 10-dimension vector as parameters for
+    dirichlet distribution to sample number of images in each class.
     """
 
     cifar_classes = {}
@@ -105,7 +105,6 @@ def cifar_noniid(dataset, no_participants, alpha=0.9):
         for j in range(10):
             clas_weight[i,j] = float(datasize[i,j])/float(train_img_size[i])
     return per_participant_list, clas_weight
-
 
 
 if __name__ == '__main__':

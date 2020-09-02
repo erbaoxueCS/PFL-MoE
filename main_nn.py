@@ -14,39 +14,51 @@ from torchvision import datasets, transforms
 
 from utils.options import args_parser
 from models.Nets import MLP, CNNMnist, CNNCifar
+from utils.util import setup_seed
+from tensorboardX import SummaryWriter
+from datetime import datetime
 
 
 def test(net_g, data_loader):
     # testing
     net_g.eval()
-    test_loss = 0
+    test_loss = []
     correct = 0
     l = len(data_loader)
-    for idx, (data, target) in enumerate(data_loader):
-        data, target = data.to(args.device), target.to(args.device)
-        log_probs = net_g(data)
-        test_loss += F.cross_entropy(log_probs, target).item()
-        y_pred = log_probs.data.max(1, keepdim=True)[1]
-        correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+    with torch.no_grad():
+        for idx, (data, target) in enumerate(data_loader):
+            data, target = data.to(args.device), target.to(args.device)
+            log_probs = net_g(data)
+            test_loss.append(F.cross_entropy(log_probs, target).item())
+            y_pred = log_probs.data.max(1, keepdim=True)[1]
+            correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
 
-    test_loss /= len(data_loader.dataset)
+        loss_avg = sum(test_loss)/len(test_loss)
+        test_acc = 100. * correct.item() / len(data_loader.dataset)
     print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss, correct, len(data_loader.dataset),
-        100. * correct / len(data_loader.dataset)))
+        loss_avg, correct, len(data_loader.dataset), test_acc))
 
-    return correct, test_loss
+    return test_acc, loss_avg
 
 
 if __name__ == '__main__':
+
     # parse args
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    setup_seed(args.seed)
 
-    torch.manual_seed(args.seed)
+    # log
+    current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
+    TAG = 'nn_{}_{}_{}_{}'.format(args.dataset, args.model, args.epochs, current_time)
+    logdir = f'runs/{TAG}'
+    if args.debug:
+        logdir = f'/tmp/runs/{TAG}'
+    writer = SummaryWriter(logdir)
 
     # load dataset and split users
     if args.dataset == 'mnist':
-        dataset_train = datasets.MNIST('./data/mnist/', train=True, download=True,
+        dataset_train = datasets.MNIST('../data/mnist/', train=True, download=True,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
@@ -56,8 +68,25 @@ if __name__ == '__main__':
         transform = transforms.Compose(
             [transforms.ToTensor(),
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_train = datasets.CIFAR10('./data/cifar', train=True, transform=transform, target_transform=None, download=True)
+        dataset_train = datasets.CIFAR10('../data/cifar', train=True, transform=transform, target_transform=None, download=True)
         img_size = dataset_train[0][0].shape
+    else:
+        exit('Error: unrecognized dataset')
+
+    # testing
+    if args.dataset == 'mnist':
+        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True,
+                   transform=transforms.Compose([
+                       transforms.ToTensor(),
+                       transforms.Normalize((0.1307,), (0.3081,))
+                   ]))
+        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
+    elif args.dataset == 'cifar':
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        dataset_test = datasets.CIFAR10('../data/cifar', train=False, transform=transform, target_transform=None, download=True)
+        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')
 
@@ -98,30 +127,17 @@ if __name__ == '__main__':
         loss_avg = sum(batch_loss)/len(batch_loss)
         print('\nTrain loss:', loss_avg)
         list_loss.append(loss_avg)
+        writer.add_scalar('train_loss', loss_avg, epoch)
+        test_acc, test_loss = test(net_glob, test_loader)
+        writer.add_scalar('test_loss', test_loss, epoch)
+        writer.add_scalar('test_acc', test_acc, epoch)
 
     # plot loss
     plt.figure()
     plt.plot(range(len(list_loss)), list_loss)
     plt.xlabel('epochs')
     plt.ylabel('train loss')
-    plt.savefig('./log/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
-
-    # testing
-    if args.dataset == 'mnist':
-        dataset_test = datasets.MNIST('./data/mnist/', train=False, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ]))
-        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
-    elif args.dataset == 'cifar':
-        transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-        dataset_test = datasets.CIFAR10('./data/cifar', train=False, transform=transform, target_transform=None, download=True)
-        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
-    else:
-        exit('Error: unrecognized dataset')
+    plt.savefig('./save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
 
     print('test on', len(dataset_test), 'samples')
     test_acc, test_loss = test(net_glob, test_loader)

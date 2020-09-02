@@ -16,12 +16,21 @@ from models.Update import LocalUpdate
 from models.Nets import MLP, CNNMnist, CNNCifar
 from models.Fed import FedAvg
 from models.test import test_img
-
+from utils.util import setup_seed
+from datetime import datetime
+from tensorboardX import SummaryWriter
 
 if __name__ == '__main__':
     # parse args
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    setup_seed(args.seed)
+
+    # log
+    current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
+    TAG = 'fed_{}_{}_{}_C{}_iid{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid, current_time)
+    logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
+    writer = SummaryWriter(logdir)
 
     # load dataset and split users
     if args.dataset == 'mnist':
@@ -79,8 +88,8 @@ if __name__ == '__main__':
         for idx in idxs_users:
             local = LocalUpdate(args=args, dataset=dataset_train, idxs=dict_users[idx])
             w, loss = local.train(net=copy.deepcopy(net_glob).to(args.device))
-            w_locals.append(copy.deepcopy(w))
-            loss_locals.append(copy.deepcopy(loss))
+            w_locals.append(w)
+            loss_locals.append(loss)
         # update global weights
         w_glob = FedAvg(w_locals)
 
@@ -89,8 +98,13 @@ if __name__ == '__main__':
 
         # print loss
         loss_avg = sum(loss_locals) / len(loss_locals)
-        print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+        print('Round {:3d}, Train loss {:.3f}'.format(iter, loss_avg))
         loss_train.append(loss_avg)
+        writer.add_scalar('train_loss', loss_avg, iter)
+        test_acc, test_loss = test_img(net_glob, dataset_test, args)
+        writer.add_scalar('test_loss', test_loss, iter)
+        writer.add_scalar('test_acc', test_acc, iter)
+
 
     # plot loss curve
     plt.figure()
