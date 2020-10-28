@@ -18,7 +18,7 @@ from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
 from datetime import datetime
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 if __name__ == '__main__':
     # parse args
@@ -29,6 +29,8 @@ if __name__ == '__main__':
     # log
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
     TAG = 'fed_{}_{}_{}_C{}_iid{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid, current_time)
+    alpha = 0.9
+    TAG = f'alpha_{alpha}/data_distribution'
     logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
     writer = SummaryWriter(logdir)
 
@@ -60,12 +62,19 @@ if __name__ == '__main__':
         if args.iid:
             dict_users = cifar_iid(dataset_train, args.num_users)
         else:
-            dict_users, _ = cifar_noniid(dataset_train, args.num_users)
-            # exit('Error: only consider IID setting in CIFAR10')
+            dict_users, _ = cifar_noniid(dataset_train, args.num_users, alpha)
+            for k, v in dict_users.items():
+                writer.add_histogram(f'user_{k}/data_distribution',
+                                     np.array(dataset_train.targets)[v],
+                                     bins=np.arange(11))
+                writer.add_histogram(f'all_user/data_distribution',
+                                     np.array(dataset_train.targets)[v],
+                                     bins=np.arange(11), global_step=k)
     else:
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
 
+    writer.close()
     # build model
     if args.model == 'cnn' and args.dataset == 'cifar':
         net_glob = CNNCifar(args=args).to(args.device)

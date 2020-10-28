@@ -13,6 +13,7 @@ from sklearn import metrics
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
         self.dataset = dataset
+        self.targets = dataset.targets
         self.idxs = list(idxs)
 
     def __len__(self):

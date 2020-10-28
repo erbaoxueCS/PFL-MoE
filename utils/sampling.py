@@ -74,7 +74,8 @@ def cifar_noniid(dataset, no_participants, alpha=0.9):
     Sample Method: take a uniformly sampled 10-dimension vector as parameters for
     dirichlet distribution to sample number of images in each class.
     """
-
+    np.random.seed(666)
+    random.seed(666)
     cifar_classes = {}
     for ind, x in enumerate(dataset):
         _, label = x
@@ -103,7 +104,7 @@ def cifar_noniid(dataset, no_participants, alpha=0.9):
     clas_weight = np.zeros((no_participants,10))
     for i in range(no_participants):
         for j in range(10):
-            clas_weight[i,j] = float(datasize[i,j])/float(train_img_size[i])
+            clas_weight[i,j] = float(datasize[i,j])/float((train_img_size[i]))
     return per_participant_list, clas_weight
 
 

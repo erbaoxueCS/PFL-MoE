@@ -61,3 +61,37 @@ class CNNCifar(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
+
+class CNNGate(nn.Module):
+    def __init__(self, args):
+        super(CNNGate, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, args.num_classes)
+
+        for p in self.parameters():
+            p.requires_grad = False
+
+        self.gate = nn.Linear(16 * 5 * 5, 1)
+        self.pfc1 = nn.Linear(16 * 5 * 5, 120)
+        self.pfc2 = nn.Linear(120, 84)
+        self.pfc3 = nn.Linear(84, args.num_classes)
+
+    def forward(self, x):
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2)
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = torch.flatten(x, 1)
+
+        z = F.relu(self.pfc1(x))
+        z = F.relu(self.pfc2(z))
+        z = self.pfc3(z)
+
+        g = torch.sigmoid(self.gate(x))
+        y = F.relu(self.fc1(x))
+        y = F.relu(self.fc2(y))
+        y = self.fc3(y)
+        return y * g + z * (1-g), g, z
+        # return z

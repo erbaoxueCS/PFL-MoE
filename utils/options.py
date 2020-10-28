@@ -28,6 +28,7 @@ def args_parser():
                         help="Whether use max pooling rather than strided convolutions")
 
     # other arguments
+    parser.add_argument('--rebuild', action='store_true', help="rebuild train data")
     parser.add_argument('--dataset', type=str, default='mnist', help="name of dataset")
     parser.add_argument('--iid', action='store_true', help='whether i.i.d or not')
     parser.add_argument('--num_classes', type=int, default=10, help="number of classes")

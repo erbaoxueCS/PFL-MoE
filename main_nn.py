@@ -2,20 +2,16 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import datasets, transforms
-
 from utils.options import args_parser
 from models.Nets import MLP, CNNMnist, CNNCifar
 from utils.util import setup_seed
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 
 
@@ -24,17 +20,16 @@ def test(net_g, data_loader):
     net_g.eval()
     test_loss = []
     correct = 0
-    l = len(data_loader)
     with torch.no_grad():
         for idx, (data, target) in enumerate(data_loader):
             data, target = data.to(args.device), target.to(args.device)
             log_probs = net_g(data)
             test_loss.append(F.cross_entropy(log_probs, target).item())
             y_pred = log_probs.data.max(1, keepdim=True)[1]
-            correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum()
+            correct += y_pred.eq(target.data.view_as(y_pred)).long().cpu().sum().item()
 
         loss_avg = sum(test_loss)/len(test_loss)
-        test_acc = 100. * correct.item() / len(data_loader.dataset)
+        test_acc = 100. * correct / len(data_loader.dataset)
     print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(
         loss_avg, correct, len(data_loader.dataset), test_acc))
 
@@ -63,6 +58,15 @@ if __name__ == '__main__':
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
                    ]))
+
+        # testing
+        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True,
+                                      transform=transforms.Compose([
+                                          transforms.ToTensor(),
+                                          transforms.Normalize((0.1307,), (0.3081,))
+                                      ]))
+        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
+
         img_size = dataset_train[0][0].shape
     elif args.dataset == 'cifar':
         transform_train = transforms.Compose([
@@ -75,28 +79,16 @@ if __name__ == '__main__':
         #     [transforms.ToTensor(),
         #      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, transform=transform_train, download=True)
-        img_size = dataset_train[0][0].shape
-    else:
-        exit('Error: unrecognized dataset')
 
-    # testing
-    if args.dataset == 'mnist':
-        dataset_test = datasets.MNIST('../data/mnist/', train=False, download=True,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                   ]))
-        test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
-    elif args.dataset == 'cifar':
-        # transform = transforms.Compose(
-        #     [transforms.ToTensor(),
-        #      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+        # testing
         transform_test = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
         dataset_test = datasets.CIFAR10('../data/cifar', train=False, transform=transform_test, download=True)
         test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
+
+        img_size = dataset_train[0][0].shape
     else:
         exit('Error: unrecognized dataset')
 
@@ -115,8 +107,10 @@ if __name__ == '__main__':
     print(net_glob)
 
     # training
-    optimizer = optim.SGD(net_glob.parameters(), lr=args.lr, momentum=args.momentum)
+    optimizer = optim.SGD(net_glob.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    creterion = nn.CrossEntropyLoss()
     train_loader = DataLoader(dataset_train, batch_size=64, shuffle=True)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
 
     list_loss = []
     net_glob.train()
@@ -126,7 +120,7 @@ if __name__ == '__main__':
             data, target = data.to(args.device), target.to(args.device)
             optimizer.zero_grad()
             output = net_glob(data)
-            loss = F.cross_entropy(output, target)
+            loss = creterion(output, target)
             loss.backward()
             optimizer.step()
             if batch_idx % 50 == 0:
@@ -134,6 +128,7 @@ if __name__ == '__main__':
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                            100. * batch_idx / len(train_loader), loss.item()))
             batch_loss.append(loss.item())
+        scheduler.step()
         loss_avg = sum(batch_loss)/len(batch_loss)
         print('\nTrain loss:', loss_avg)
         list_loss.append(loss_avg)
@@ -142,12 +137,12 @@ if __name__ == '__main__':
         writer.add_scalar('test_loss', test_loss, epoch)
         writer.add_scalar('test_acc', test_acc, epoch)
 
-    # plot loss
-    plt.figure()
-    plt.plot(range(len(list_loss)), list_loss)
-    plt.xlabel('epochs')
-    plt.ylabel('train loss')
-    plt.savefig('./save/nn_{}_{}_{}.png'.format(args.dataset, args.model, args.epochs))
+    # save model weights
+    save_info = {
+        "epochs": args.epochs,
+        "optimizer": optimizer.state_dict(),
+        "model": net_glob.state_dict()
+    }
 
-    print('test on', len(dataset_test), 'samples')
-    test_acc, test_loss = test(net_glob, test_loader)
+    save_path = f'/tmp/runs/{TAG}' if args.debug else f'./save/{TAG}'
+    torch.save(save_info, save_path)
