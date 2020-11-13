@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import copy
 import numpy as np
@@ -13,12 +11,15 @@ import torch
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar
+from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18
 from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
+import matplotlib
+matplotlib.use('Agg')
+
 
 if __name__ == '__main__':
     # parse args
@@ -28,9 +29,10 @@ if __name__ == '__main__':
 
     # log
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
-    TAG = 'fed_{}_{}_{}_C{}_iid{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid, current_time)
-    alpha = 0.9
-    TAG = f'alpha_{alpha}/data_distribution'
+    TAG = 'exp/fed/{}_{}_{}_C{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid,
+                                                           args.alpha, args.num_users, current_time)
+    # TAG = f'alpha_{alpha}/data_distribution'
+
     logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
     writer = SummaryWriter(logdir)
 
@@ -45,7 +47,6 @@ if __name__ == '__main__':
         else:
             dict_users = mnist_noniid(dataset_train, args.num_users)
     elif args.dataset == 'cifar':
-        # trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -59,32 +60,53 @@ if __name__ == '__main__':
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=transform_train)
         dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=transform_test)
 
-        if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
-        else:
-            dict_users, _ = cifar_noniid(dataset_train, args.num_users, alpha)
-            for k, v in dict_users.items():
-                writer.add_histogram(f'user_{k}/data_distribution',
-                                     np.array(dataset_train.targets)[v],
-                                     bins=np.arange(11))
-                writer.add_histogram(f'all_user/data_distribution',
-                                     np.array(dataset_train.targets)[v],
-                                     bins=np.arange(11), global_step=k)
+    elif args.dataset == 'fmnist':
+        dataset_train = datasets.FashionMNIST('../data/fmnist/', train=True, download=True,
+                                       transform=transforms.Compose([
+                                           transforms.Resize((32, 32)),
+                                           transforms.RandomCrop(32, padding=4),
+                                           transforms.RandomHorizontalFlip(),
+                                           transforms.ToTensor(),
+                                           transforms.Normalize((0.1307,), (0.3081,)),
+                                       ]))
+
+        # testing
+        dataset_test = datasets.FashionMNIST('../data/fmnist/', train=False, download=True,
+                                      transform=transforms.Compose([
+                                          transforms.Resize((32, 32)),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize((0.1307,), (0.3081,))
+                                      ]))
+        # test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')
+
+    if args.iid:
+        dict_users = cifar_iid(dataset_train, args.num_users)
+    else:
+        dict_users, _ = cifar_noniid(dataset_train, args.num_users, args.alpha)
+        for k, v in dict_users.items():
+            writer.add_histogram(f'user_{k}/data_distribution',
+                                 np.array(dataset_train.targets)[v],
+                                 bins=np.arange(11))
+            writer.add_histogram(f'all_user/data_distribution',
+                                 np.array(dataset_train.targets)[v],
+                                 bins=np.arange(11), global_step=k)
+
     img_size = dataset_train[0][0].shape
 
-    writer.close()
     # build model
-    if args.model == 'cnn' and args.dataset == 'cifar':
+    if args.model == 'lenet' and (args.dataset == 'cifar' or args.dataset == 'fmnist'):
         net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'cnn' and args.dataset == 'mnist':
+    elif args.model == 'lenet' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
             len_in *= x
         net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
+    elif args.model == 'resnet' and args.dataset == 'cifar':
+        net_glob = ResNet18().to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -125,12 +147,19 @@ if __name__ == '__main__':
         writer.add_scalar('test_loss', test_loss, iter)
         writer.add_scalar('test_acc', test_acc, iter)
 
+        # save model weights
+        if (iter+1) % 500 == 0:
+            save_info = {
+                "model": net_glob.state_dict()
+            }
+            save_path = f'/tmp/save/{TAG}_{iter+1}es' if args.debug else f'./save/{TAG}_{iter+1}es'
+            torch.save(save_info, save_path)
 
     # plot loss curve
-    plt.figure()
-    plt.plot(range(len(loss_train)), loss_train)
-    plt.ylabel('train_loss')
-    plt.savefig('./save/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
+    # plt.figure()
+    # plt.plot(range(len(loss_train)), loss_train)
+    # plt.ylabel('train_loss')
+    # plt.savefig('./save/fed_{}_{}_{}_C{}_iid{}.png'.format(args.dataset, args.model, args.epochs, args.frac, args.iid))
 
     # testing
     net_glob.eval()
@@ -138,4 +167,4 @@ if __name__ == '__main__':
     acc_test, loss_test = test_img(net_glob, dataset_test, args)
     print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy: {:.2f}".format(acc_test))
-
+    writer.close()

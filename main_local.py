@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar
+from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18
 from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
@@ -25,6 +25,8 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from models.Update import DatasetSplit
 import random
+from models.test import local_test
+from utils.util import add_scalar
 
 
 def test(model, data_source):
@@ -66,7 +68,8 @@ if __name__ == '__main__':
 
     # log
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
-    TAG = 'local_{}_{}_{}_C{}_iid{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid, current_time)
+    TAG = 'exp/local/{}_{}_{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.iid,
+                                                             args.alpha, args.num_users, current_time)
     logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
     writer = SummaryWriter(logdir)
 
@@ -82,7 +85,6 @@ if __name__ == '__main__':
             dict_users = mnist_noniid(dataset_train, args.num_users)
 
     elif args.dataset == 'cifar':
-        # trans_cifar = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
         transform_train = transforms.Compose([
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
@@ -95,34 +97,54 @@ if __name__ == '__main__':
         ])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=transform_train)
         dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=transform_test)
+    elif args.dataset == 'fmnist':
+        dataset_train = datasets.FashionMNIST('../data/fmnist/', train=True, download=True,
+                                       transform=transforms.Compose([
+                                           transforms.Resize((32, 32)),
+                                           transforms.RandomCrop(32, padding=4),
+                                           transforms.RandomHorizontalFlip(),
+                                           transforms.ToTensor(),
+                                           transforms.Normalize((0.1307,), (0.3081,)),
+                                       ]))
 
-        if args.iid:
-            dict_users = cifar_iid(dataset_train, args.num_users)
-        else:
-            dict_users, _ = cifar_noniid(dataset_train, args.num_users, 0.9)
-            for k, v in dict_users.items():
-                writer.add_histogram(f'user_{k}/data_distribution',
-                                     np.array(dataset_train.targets)[v],
-                                     bins=np.arange(11))
-                writer.add_histogram(f'all_user/data_distribution',
-                                     np.array(dataset_train.targets)[v],
-                                     bins=np.arange(11), global_step=k)
+        # testing
+        dataset_test = datasets.FashionMNIST('../data/fmnist/', train=False, download=True,
+                                      transform=transforms.Compose([
+                                          transforms.Resize((32, 32)),
+                                          transforms.ToTensor(),
+                                          transforms.Normalize((0.1307,), (0.3081,))
+                                      ]))
+        # test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     else:
         exit('Error: unrecognized dataset')
+
+    if args.iid:
+        dict_users = cifar_iid(dataset_train, args.num_users)
+    else:
+        dict_users, _ = cifar_noniid(dataset_train, args.num_users, args.alpha)
+        for k, v in dict_users.items():
+            writer.add_histogram(f'user_{k}/data_distribution',
+                                 np.array(dataset_train.targets)[v],
+                                 bins=np.arange(11))
+            writer.add_histogram(f'all_user/data_distribution',
+                                 np.array(dataset_train.targets)[v],
+                                 bins=np.arange(11), global_step=k)
 
     test_loader = DataLoader(dataset_test, batch_size=1000, shuffle=False)
     img_size = dataset_train[0][0].shape
 
     # build model
-    if args.model == 'cnn' and args.dataset == 'cifar':
+    if args.model == 'lenet' and (args.dataset == 'cifar' or args.dataset == 'fmnist'):
         net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'cnn' and args.dataset == 'mnist':
+    elif args.model == 'lenet' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
             len_in *= x
         net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
+    elif args.model == 'resnet':
+        net_glob = ResNet18().to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -133,9 +155,12 @@ if __name__ == '__main__':
 
     local_acc_final = []
     total_acc_final = []
+    local_acc = np.zeros([args.num_users, args.epochs])
+    total_acc = np.zeros([args.num_users, args.epochs])
+
     # training
     for idx in range(args.num_users):
-        print(w_init)
+        # print(w_init)
         net_glob.load_state_dict(w_init)
         optimizer = optim.Adam(net_glob.parameters())
         train_loader = DataLoader(DatasetSplit(dataset_train, dict_users[idx]), batch_size=64, shuffle=True)
@@ -154,23 +179,41 @@ if __name__ == '__main__':
                 loss = F.cross_entropy(output, target)
                 loss.backward()
                 optimizer.step()
-                if batch_idx % 3 == 0:
-                    print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                        epoch, batch_idx * len(data), len(train_loader.dataset),
-                               100. * batch_idx / len(train_loader), loss.item()))
+                # if batch_idx % 3 == 0:
+                #     print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                #         epoch, batch_idx * len(data), len(train_loader.dataset),
+                #                100. * batch_idx / len(train_loader), loss.item()))
                 batch_loss.append(loss.item())
-            loss_avg = sum(batch_loss)/len(batch_loss)
+
+            loss_avg = sum(batch_loss) / len(batch_loss)
             print('\nLocal Train loss:', loss_avg)
-            list_loss.append(loss_avg)
-            writer.add_scalar(f'user{idx}/local_train_loss', loss_avg, epoch)
-            total_test_loss, total_test_acc, correct_class_acc = test(net_glob, test_loader)
-            local_test_acc = (correct_class_acc * image_trainset_weight).sum() * 100
-            writer.add_scalar(f'user{idx}/total_test_acc', total_test_acc, epoch)
-            writer.add_scalar(f'user{idx}/local_test_acc', local_test_acc, epoch)
-            print('Global Test ACC:', total_test_acc)
-            print('Local Test ACC:', local_test_acc)
-        local_acc_final.append(local_test_acc)
-        total_acc_final.append(total_test_acc)
+            writer.add_scalar(f'user_{idx}/local_train_loss', loss_avg, epoch)
+
+            test_result = local_test(args, net_glob, test_loader, image_trainset_weight)
+            add_scalar(writer, idx, test_result, epoch)
+            print('Global Test ACC:', test_result[1])
+            print('Local Test ACC:', test_result[3])
+
+            total_acc[idx][epoch] = test_result[1]
+            local_acc[idx][epoch] = test_result[3]
+
+        total_acc_final.append(test_result[1])
+        local_acc_final.append(test_result[3])
+        print(f'user {idx} done!')
+
+    save_info = {
+        "total_acc": total_acc,
+        "local_acc": local_acc
+    }
+    save_path = f'{logdir}/local_train_epoch_acc'
+    torch.save(save_info, save_path)
+
+    total_acc = total_acc.mean(axis=0)
+    local_acc = local_acc.mean(axis=0)
+    for epoch in range(args.epochs):
+        writer.add_scalar('test/global/test_acc', total_acc[epoch], epoch)
+        writer.add_scalar('test/local/test_acc', local_acc[epoch], epoch)
+    writer.close()
 
     # plot loss curve
     plt.figure()
