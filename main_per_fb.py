@@ -48,7 +48,8 @@ if __name__ == '__main__':
 
     elif args.dataset == 'cifar':
         save_dataset_path = f'./data/cifar_non_iid{args.alpha}_user{args.num_users}_fast_data'
-        global_weight = torch.load('./save/nn_cifar_cnn_100_Oct.13_19.45.20')['model']
+        # global_weight = torch.load('./save/nn_cifar_cnn_100_Oct.13_19.45.20')['model']
+        global_weight = torch.load(f'./save/exp/fed/{args.dataset}_{args.model}_1000_C0.1_iidFalse_{args.alpha}_user{args.num_users}_1000es')['model']
         if args.rebuild:
             # training
             transform_train = transforms.Compose([

@@ -16,7 +16,7 @@ from datetime import datetime
 from utils.sampling import cifar_noniid
 import numpy as np
 from models.Update import DatasetSplit
-from models.test import user_test
+from models.test import user_test, user_per_test
 
 
 if __name__ == '__main__':
@@ -29,10 +29,16 @@ if __name__ == '__main__':
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
     TAG = 'exp/{}gate2_{}_{}_{}_{}_user{}_{}'.format('struct/' if args.struct else '', args.dataset, args.model, args.epochs,
                                               args.alpha, args.num_users, current_time)
+    TAG2 = 'exp/{}non_iid/per_fb_{}_{}_{}_{}_user{}_{}'.format('struct/' if args.struct else '', args.dataset, args.model, args.epochs,
+                                              args.alpha, args.num_users, current_time)
     logdir = f'runs/{TAG}'
+    logdir2 = f'runs/{TAG2}'
     if args.debug:
         logdir = f'/tmp/runs/{TAG}'
+        logdir2 = f'/tmp/runs/{TAG2}'
     writer = SummaryWriter(logdir)
+    writer2 = SummaryWriter(logdir2)
+
 
     # load dataset and split users
     train_loader, test_loader, class_weight = 1, 1, 1
@@ -51,6 +57,12 @@ if __name__ == '__main__':
 
     elif args.dataset == 'cifar':
         save_dataset_path = f'./data/cifar_non_iid{args.alpha}_user{args.num_users}_fast_data'
+        # global_weight = torch.load('./save/nn_cifar_cnn_100_Oct.13_19.45.20')['model']
+        global_weight = torch.load('./save/exp/fed/cifar_lenet_1000_C0.1_iidFalse_5.0_user30_Nov.14_10.28.33_1000es')['model']
+
+        # global_weight = torch.load(
+        #     f'./save/exp/fed/{args.dataset}_{args.model}_1000_C0.1_iidFalse_{args.alpha}_user{args.num_users}_1000es')[
+        #     'model']
         if args.rebuild:
             # training
             transform_train = transforms.Compose([
@@ -103,6 +115,8 @@ if __name__ == '__main__':
 
     local_acc = np.zeros([args.num_users, args.epochs + 1])
     total_acc = np.zeros([args.num_users, args.epochs + 1])
+    local_acc2 = np.zeros([args.num_users, args.epochs + 1])
+    total_acc2 = np.zeros([args.num_users, args.epochs + 1])
 
     for user_num in range(len(dict_users)):
         # user data
@@ -121,8 +135,6 @@ if __name__ == '__main__':
         class_weight /= sum(class_weight)
 
         # init
-        global_weight = torch.load('./save/nn_cifar_cnn_100_Oct.13_19.45.20')['model']
-        # global_weight = torch.load('./save/fed_cifar_cnn_1000_C0.1_iidFalse_0.9_Nov.05_09.31.38_500es')['model']
         net_glob.load_state_dict(global_weight, False)
         net_glob.pfc1.load_state_dict({'weight': global_weight['fc1.weight'], 'bias': global_weight['fc1.bias']})
         net_glob.pfc2.load_state_dict({'weight': global_weight['fc2.weight'], 'bias': global_weight['fc2.bias']})
@@ -143,6 +155,11 @@ if __name__ == '__main__':
         total_acc[user_num][0] = test_result[1]
         local_acc[user_num][0] = test_result[3]
 
+        test_result = user_per_test(args, net_glob, test_loader, class_weight)
+        add_scalar(writer2, user_num, test_result, 0)
+        total_acc2[user_num][0] = test_result[1]
+        local_acc2[user_num][0] = test_result[3]
+
         for epoch in range(1, args.epochs+1):
             net_glob.train()
             batch_loss = []
@@ -162,7 +179,12 @@ if __name__ == '__main__':
             writer.add_histogram(f"user_{user_num}/pfc3/weight", net_glob.pfc3.weight, epoch)
             loss_avg = sum(batch_loss) / len(batch_loss)
             print(f'User {user_num} train loss:', loss_avg)
-            writer.add_scalar(f'user_{user_num}/pfc_train_loss', loss_avg, epoch)
+            writer2.add_scalar(f'user_{user_num}/pfc_train_loss', loss_avg, epoch)
+
+            test_result = user_per_test(args, net_glob, test_loader, class_weight)
+            add_scalar(writer2, user_num, test_result, epoch)
+            total_acc2[user_num][epoch] = test_result[1]
+            local_acc2[user_num][epoch] = test_result[3]
 
             gate_epochs = 1
             for gate_epoch in range(gate_epochs):
@@ -190,12 +212,23 @@ if __name__ == '__main__':
         "total_acc": total_acc,
         "local_acc": local_acc
     }
+    save_info2 = {
+        "total_acc": total_acc2,
+        "local_acc": local_acc2
+    }
     save_path = f'{logdir}/local_train_epoch_acc'
+    save_path2 = f'{logdir2}/local_train_epoch_acc'
     torch.save(save_info, save_path)
+    torch.save(save_info2, save_path2)
 
     total_acc = total_acc.mean(axis=0)
     local_acc = local_acc.mean(axis=0)
+    total_acc2 = total_acc2.mean(axis=0)
+    local_acc2 = local_acc2.mean(axis=0)
     for epoch, _ in enumerate(total_acc):
         writer.add_scalar('test/global/test_acc', total_acc[epoch], epoch)
         writer.add_scalar('test/local/test_acc', local_acc[epoch], epoch)
+        writer2.add_scalar('test/global/test_acc', total_acc2[epoch], epoch)
+        writer2.add_scalar('test/local/test_acc', local_acc2[epoch], epoch)
     writer.close()
+    writer2.close()
