@@ -15,7 +15,7 @@ import torch.nn.functional as F
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18
+from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18, vgg16
 from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
     TAG = 'exp/local/{}_{}_{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.iid,
                                                              args.alpha, args.num_users, current_time)
-    logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
+    logdir = f'runs/{TAG}' if not args.debug else f'runs2/{TAG}'
     writer = SummaryWriter(logdir)
 
     # load dataset and split users
@@ -138,6 +138,8 @@ if __name__ == '__main__':
         net_glob = CNNCifar(args=args).to(args.device)
     elif args.model == 'lenet' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
+    elif args.model == 'vgg' and args.dataset == 'cifar':
+        net_glob = vgg16().to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:

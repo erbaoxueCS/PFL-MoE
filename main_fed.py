@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # Python version: 3.6
 
-import matplotlib.pyplot as plt
 import copy
 import numpy as np
 from torchvision import datasets, transforms
@@ -11,7 +10,7 @@ import torch
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18
+from models.Nets import MLP, vgg16, CNNMnist, CNNCifar, ResNet18
 from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
@@ -33,7 +32,7 @@ if __name__ == '__main__':
                                                            args.alpha, args.num_users, current_time)
     # TAG = f'alpha_{alpha}/data_distribution'
 
-    logdir = f'runs/{TAG}' if not args.debug else f'/tmp/runs/{TAG}'
+    logdir = f'runs/{TAG}' if not args.debug else f'runs2/{TAG}'
     writer = SummaryWriter(logdir)
 
     # load dataset and split users
@@ -100,6 +99,8 @@ if __name__ == '__main__':
         net_glob = CNNCifar(args=args).to(args.device)
     elif args.model == 'lenet' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
+    elif args.model == 'vgg' and args.dataset == 'cifar':
+        net_glob = vgg16().to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
@@ -122,6 +123,7 @@ if __name__ == '__main__':
     net_best = None
     best_loss = None
     val_acc_list, net_list = [], []
+    test_best_acc = 0.0
 
     for iter in range(args.epochs):
         w_locals, loss_locals = [], []
@@ -147,13 +149,19 @@ if __name__ == '__main__':
         writer.add_scalar('test_loss', test_loss, iter)
         writer.add_scalar('test_acc', test_acc, iter)
 
+        save_info = {
+            "model": net_glob.state_dict(),
+            "epoch": iter
+        }
         # save model weights
         if (iter+1) % 500 == 0:
-            save_info = {
-                "model": net_glob.state_dict()
-            }
-            save_path = f'/tmp/save/{TAG}_{iter+1}es' if args.debug else f'./save/{TAG}_{iter+1}es'
+            save_path = f'./save2/{TAG}_{iter+1}es' if args.debug else f'./save/{TAG}_{iter+1}es'
             torch.save(save_info, save_path)
+        if iter > 100 and test_acc > test_best_acc:
+            test_best_acc = test_acc
+            save_path = f'./save2/{TAG}_bst' if args.debug else f'./save/{TAG}_bst'
+            torch.save(save_info, save_path)
+
 
     # plot loss curve
     # plt.figure()

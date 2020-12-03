@@ -34,6 +34,7 @@ class LocalUpdate(object):
     def train(self, net):
         net.train()
         # train and update
+
         # optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=0.9, weight_decay=5e-4)
         optimizer = torch.optim.SGD(net.parameters(), lr=self.args.lr, momentum=0.5)
 

@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import datasets, transforms
 from utils.options import args_parser
-from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18
+from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18, vgg16
 from utils.util import setup_seed
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     TAG = 'nn_{}_{}_{}_{}'.format(args.dataset, args.model, args.epochs, current_time)
     logdir = f'runs/{TAG}'
     if args.debug:
-        logdir = f'/tmp/runs/{TAG}'
+        logdir = f'runs2/{TAG}'
     writer = SummaryWriter(logdir)
 
     # load dataset and split users
@@ -91,6 +91,8 @@ if __name__ == '__main__':
         net_glob = CNNCifar(args=args).to(args.device)
     elif args.model == 'lenet' and args.dataset == 'mnist':
         net_glob = CNNMnist(args=args).to(args.device)
+    elif args.model == 'vgg' and args.dataset == 'cifar':
+        net_glob = vgg16().to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
@@ -109,7 +111,7 @@ if __name__ == '__main__':
     train_loader = DataLoader(dataset_train, batch_size=64, shuffle=True)
     # optimizer = optim.Adam(net_glob.parameters())
     optimizer = optim.SGD(net_glob.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=40, gamma=0.1)
     # # # scheduler.step()
 
 
@@ -130,7 +132,7 @@ if __name__ == '__main__':
                     epoch, batch_idx * len(data), len(train_loader.dataset),
                            100. * batch_idx / len(train_loader), loss.item()))
             batch_loss.append(loss.item())
-        scheduler.step()
+        # scheduler.step()
         loss_avg = sum(batch_loss)/len(batch_loss)
         print('\nTrain loss:', loss_avg)
         list_loss.append(loss_avg)
@@ -146,6 +148,6 @@ if __name__ == '__main__':
         "model": net_glob.state_dict()
     }
 
-    save_path = f'/tmp/save/{TAG}' if args.debug else f'./save/{TAG}'
+    save_path = f'save2/{TAG}' if args.debug else f'save2/{TAG}'
     torch.save(save_info, save_path)
     writer.close()
