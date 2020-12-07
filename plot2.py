@@ -19,7 +19,7 @@ data_model = [['fmnist', 'lenet'],
 
 regexs = []
 for (data_set, model) in data_model:
-    regexs.append(re.compile(r'{}_{}_1000_C0\.1_iidFalse_[0|2]\.[5|9|0]_user100_*'.format(data_set,model)))
+    regexs.append(re.compile(r'{}_{}_1000_C0\.1_iidFalse_[0|2]\.[5|9|0]_user100_*'.format(data_set, model)))
 
 
 def find_file(rootdir1, regex):
@@ -64,16 +64,16 @@ plt.rcParams["axes.titleweight"] = "bold"
 plt.rcParams['axes.grid'] = True
 plt.grid(linestyle='-.')
 
-line = ['-.', '-', '--']
+line = ['-', '--', '-.']
 handles = []
 strid = 4
 for i in range(3):
     y = gety(file_names[i])
-    linewidth = [1, 1, 1]
+    linewidth = np.array([1, 1.5, 1.25])
 
-    l1, = axs[0].plot(range(0, 1000, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth[i],)
-    l2, = axs[0].plot(range(0, 1000, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth[i])
     l3, = axs[0].plot(range(0, 1000, strid), y[2][::strid], 'g' + line[i], linewidth=linewidth[i])
+    l2, = axs[0].plot(range(0, 1000, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth[i])
+    l1, = axs[0].plot(range(0, 1000, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth[i], )
     handles += l1, l2, l3
 # axs[0].
 
@@ -81,13 +81,13 @@ axs[0].title('FedAvg')
 axs[0].xlabel('Rounds')
 axs[0].ylabel('Global Acc')
 
-dict = [['FashionMNIST', 'LeNet5'],
+dict = [['Fashion-MNIST', 'LeNet-5'],
              ['CIFAR-10', 'VGG-16'],
-              ['CIFAR-10', 'LeNet5']]
+              ['CIFAR-10', 'LeNet-5']]
 alphas = [2.0, 0.9, 0.5]
 
 Label_Com = [r'$\alpha={}$ {} {}'.format(alphas[j], dict[i][0], dict[i][1]) for i in range(3) for j in range(3)]
-axs[0].legend([], labels=Label_Com, loc='lower right', fontsize=8.8, ncol=2)
+axs[0].legend(handles=handles, labels=Label_Com, loc='lower right', fontsize=8.8, ncol=2)
 
 ax = axs[0].axes()
 axins = inset_axes(ax, width="40%", height="30%", loc='lower left',
@@ -96,11 +96,10 @@ axins = inset_axes(ax, width="40%", height="30%", loc='lower left',
 ys = []
 for i in range(2):
     y = gety(file_names[i])
-    linewidth = 1
-
-    l1, = axins.plot(range(0, 1000, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth, )
-    l2, = axins.plot(range(0, 1000, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth)
-    l3, = axins.plot(range(0, 1000, strid), y[2][::strid], 'g' + line[i], linewidth=linewidth)
+    # linewidth = 1
+    l3, = axins.plot(range(0, 1000, strid), y[2][::strid], 'g' + line[i], linewidth=linewidth[i])
+    l2, = axins.plot(range(0, 1000, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth[i])
+    l1, = axins.plot(range(0, 1000, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth[i], )
     ys += [y[0][::strid],
            y[1][::strid],
            y[2][::strid]]
@@ -114,7 +113,7 @@ zone_right = int(999 / strid)
 
 # 坐标轴的扩展比例（根据实际数据调整）
 x_ratio = 0  # x轴显示范围的扩展比例
-y_ratio = 0.1  # y轴显示范围的扩展比例
+y_ratio = 0.05  # y轴显示范围的扩展比例
 
 for i, y in enumerate(ys):
     ys[i] = y

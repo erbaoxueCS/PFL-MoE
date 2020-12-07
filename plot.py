@@ -37,11 +37,11 @@ def get3(pwd, pwd2, epochs=100, num_users=100):
     return ret
 
 
-alpha = 0.9
+alpha = 2
 f = True
-dataset = 'fmnist'
-model = 'lenet'
-epochs = 200 if model=='vgg' else 100
+dataset = 'cifar'
+model = 'vgg'
+epochs = 200 if model =='vgg' else 100
 
 # pwd = 'runs/exp/{}/cifar_lenet_100_{}_user100'.format('gate2', '0.9')
 rootpwd = "runs/exp/{}/"
@@ -85,7 +85,8 @@ fed, per, struct, gate, per2, g_fed, g_per, g_struct, g_gate, g_per2, = get3(pwd
 plt.rcParams["axes.labelweight"] = "bold"
 plt.rcParams["axes.labelsize"] = "large"
 plt.rcParams["axes.titleweight"] = "bold"
-
+# color_dot = "#0000FF"
+color_dot = "c"
 # cm_g = plt.get_cmap("Greens")
 # cm_r = plt.get_cmap("Reds")l1 = axs[0].scatter(fed, per-fed)
 #
@@ -104,9 +105,10 @@ r2 = ~ r1
 fig, axs2d = plt.subplots(2, 2, figsize=(10, 10))
 # axs = [axs]
 axs = [axs2d[0][0], axs2d[1][0], axs2d[0][1], axs2d[1][1]]
-l1, = axs[0].plot(fed, per-fed, 'c.')
-l2, = axs[0].plot(fed[r1], (struct-fed)[r1], 'r>')
 l3, = axs[0].plot(fed[r2], (struct-fed)[r2], 'g>')
+l1, = axs[0].plot(fed, per-fed, '.', c=color_dot)
+l2, = axs[0].plot(fed[r1], (struct-fed)[r1], 'r>')
+
 axs[0].set_title('Local Test Acc of PFL',)
 axs[0].set_xlabel('FedAvg Local Acc(user index)', )
 axs[0].set_ylabel('Local Acc(PFL) - FedAvg Local Acc')
@@ -125,9 +127,9 @@ axs[1].set_xlabel('FedAvg Local Acc(user index)', )
 # axs[1].set_xlabel('FedAvg')
 r1 = (g_struct > g_per)
 r2 = ~ r1
-l1, = axs[1].plot(fed, g_per-np.mean(fed), 'c.')
-l2, = axs[1].plot(fed[r1], (g_struct-np.mean(fed))[r1], 'r<')
 l3, = axs[1].plot(fed[r2], (g_struct-np.mean(fed))[r2], 'g<')
+l1, = axs[1].plot(fed, g_per-np.mean(fed), '.', c=color_dot)
+l2, = axs[1].plot(fed[r1], (g_struct-np.mean(fed))[r1], 'r<')
 
 
 Label_Com1 = ['PFL-FB', 'PFL-MF(>PFL-FB)', 'PFL-MF(<PFL-FB)']
@@ -136,14 +138,14 @@ axs[1].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right')
 r1 = (gate > per)
 r2 = ~ r1
 
-l1, = axs[2].plot(fed, per-fed, 'c.')
-l2, = axs[2].plot(fed[r1], (gate-fed)[r1], 'r>')
 l3, = axs[2].plot(fed[r2], (gate-fed)[r2], 'g>')
+l1, = axs[2].plot(fed, per-fed, '.', c=color_dot)
+l2, = axs[2].plot(fed[r1], (gate-fed)[r1], 'r>')
 axs[2].set_title('Local Test Acc of PFL')
 axs[2].set_xlabel('FedAvg Local Acc(user index)', )
 # axs[2].set_ylabel('Local Acc(PFL) - FedAvg Local Acc')
 
-Label_Com0 = ['PFL-FB', 'PFL-MFs(>PFL-FB)', 'PFL-MFs(<PFL-FB)']
+Label_Com0 = ['PFL-FB', 'PFL-MFE(>PFL-FB)', 'PFL-MFE(<PFL-FB)']
 axs[2].legend(handles=[l1, l2, l3], labels=Label_Com0, loc='upper right')
 
 axs[2].axhline(y=0, color='b', linestyle='-.', lw=1)
@@ -157,12 +159,13 @@ axs[3].set_xlabel('FedAvg Local Acc(user index)', )
 # axs[1].set_xlabel('FedAvg')
 r1 = (g_gate > g_per)
 r2 = ~ r1
-l1, = axs[3].plot(fed, g_per-np.mean(fed), 'c.')
-l2, = axs[3].plot(fed[r1], (g_gate-np.mean(fed))[r1], 'r<')
+
 l3, = axs[3].plot(fed[r2], (g_gate-np.mean(fed))[r2], 'g<')
+l1, = axs[3].plot(fed, g_per-np.mean(fed), '.', c=color_dot)
+l2, = axs[3].plot(fed[r1], (g_gate-np.mean(fed))[r1], 'r<')
 
 
-Label_Com1 = ['PFL-FB', 'PFL-MFs(>PFL-FB)', 'PFL-MFs(<PFL-FB)']
+Label_Com1 = ['PFL-FB', 'PFL-MFE(>PFL-FB)', 'PFL-MFE(<PFL-FB)']
 # handles1, labels1 = axs[1].get_legend_handles_labels()
 axs[3].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right')
 
@@ -177,7 +180,8 @@ print("alpha={}, g_struct={}".format(alpha, round(np.mean(g_struct), 2)))
 print("alpha={}, g_gate={}".format(alpha, round(np.mean(g_gate), 2)))
 
 # fig.suptitle('LeNet, CIFAR-10, Non-IID α=0.9, 100 Users')
-# fig.savefig("imgs/09{}_{}{}.pdf".format(dataset, model, '_f'if f else ''), bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
-fig.show()
+assert alpha == 0.9 or alpha == 2
+fig.savefig("imgs/{}{}_{}{}.pdf".format('09' if alpha==0.9 else '2', dataset, model, '_f'if f else ''), bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
+# fig.show()
 
 
