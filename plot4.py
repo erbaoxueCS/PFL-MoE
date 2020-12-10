@@ -1,6 +1,7 @@
 import torch
 import os
 import matplotlib.pyplot as plt
+from matplotlib.colors import rgb_to_hsv
 import numpy as np
 # import glob
 import re
@@ -20,8 +21,9 @@ data_model = [['fmnist', 'lenet'],
 
 
 data_model_fed = [['fmnist', 'lenet'],
-             ['cifar', 'vggg'],
-              ['cifar', 'lenet']]
+
+              ['cifar', 'lenet'],
+['cifar', 'vggg'],]
 
 regexs = []
 for (data_set, model) in data_model:
@@ -43,7 +45,7 @@ def find_file(rootdir1, regex):
     return ret
 
 
-def gety(file_names):
+def gety(rootpwd, file_names):
     res = []
     for f in file_names:
         tensor_file = ''
@@ -69,7 +71,7 @@ def gety(file_names):
         res.append(list(acc_global))
     return res
 
-def gety_fed(file_names):
+def gety_fed(rootpwd, file_names):
     res = []
     for f in file_names:
         event_file = ''
@@ -89,8 +91,8 @@ def gety_fed(file_names):
 
 
 axs = [plt]
-file_names = [sorted(find_file(rootpwd, regex), reverse=True) for regex in regexs]
-file_names_fed = [sorted(find_file(rootpwd_fed, regex), reverse=True) for regex in regexs_fed]
+file_names = [sorted(find_file(rootpwd, regex), reverse=False) for regex in regexs]
+file_names_fed = [sorted(find_file(rootpwd_fed, regex), reverse=False) for regex in regexs_fed]
 
 # for i in range(3):
 print()
@@ -101,34 +103,55 @@ plt.rcParams["axes.labelsize"] = "large"
 plt.rcParams["axes.titleweight"] = "bold"
 plt.rcParams['axes.grid'] = True
 plt.grid(linestyle='-.')
-
 line = ['-.', '-', '--']
 handles = []
 strid = 1
 epochs = 100
-fig, axs2d = plt.subplots(1, 6, figsize=(30, 5))
+fig, axs2d = plt.subplots(1, 3, figsize=(15, 4))
+fig.tight_layout()
 axs = axs2d
+titles = ['Fashion-MNIST+LeNet-5', 'CIFAR-10+LeNet-5', 'CIFAR-10+VGG-16']
+colors = [ 'pink', 'lightblue' ]
 for i in range(3):
-    y = gety(file_names[i])
-    # y_fed = gety_fed(file_names_fed[i])
+    y = gety(rootpwd, file_names[i])
+    y_fed = gety_fed(rootpwd_fed, file_names_fed[i])
+    blank = 0.03
+    # for j, line_y in enumerate(y_fed.max(1)):
+    #     axs[i].axhline(line_y, xmin=j*(1/3)+blank, xmax=j*(1/3)+(1/3)-blank, color='b', linestyle='-', linewidth=0.8)
     linewidth = [1, 1, 1]
-    labels = ['0.5', '0.9', '2.0']
+    labels = ['0.5', '0.5', '0.9', '0.9', '2.0', '2.0']
+    labels = [r'$\alpha='+i+"$" for i in labels]
 
-    l1 = axs[2*i].boxplot(y[::2], labels=labels, notch=True, showmeans=True, )
-    l1['boxes'][0].set(color='b')
-    axs[2*i].axhline(y=93, xmin=0., xmax=0.33, color='b', linestyle='-', lw=1)
-    l2 = axs[2*i+1].boxplot(y[1::2], labels=labels, notch=True, showmeans=True)
+    bplot = axs[i].boxplot(y, labels=labels, patch_artist=True, notch=True, showmeans=True, )
+    for patch, color in zip(bplot['boxes'], colors*3):
+        patch.set_facecolor(color)
+    # l1 = axs[2*i].boxplot(y[::2], labels=labels, notch=True, showmeans=True, )
+    #
+    # l1['boxes'][0].set(color='b')
+    # axs[2*i].axhlin`e(y=93, xmin=0., xmax=0.33, color='b', linestyle='-', lw=1)
+    # l2 = axs[2*i+1].boxplot(y[1::2], labels=labels, notch=True, showmeans=True)
     axs[i].set_ylabel('test acc')
+    if i != 0:
+        # axs[i].set_ylabel(False)
+        # axs[i].y_label.set_visible(False)
+        axs[i].yaxis.label.set_visible(False)
+    else:
+        axs[i].set_ylabel('Test Acc(%)')
+    if i == 2:
+        p3 = plt.scatter([], [], marker='s', color=colors[0])
+        p4 = plt.scatter([], [], marker='s', color=colors[1])
+        axs[i].legend(handles=[p3,p4], labels=['local test', 'global test'], loc='upper right', fontsize=11, bbox_to_anchor=(0, 0, 1.015, 1.11), ncol=2)
 
     # l1, = axs[i].plot(range(0, epochs, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth[i],)
     # l2, = axs[i].plot(range(0, epochs, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth[i])
     # l3, = axs[i].plot(range(0, epochs, strid), y[2][::strid], 'g' + line[i], linewidth=linewidth[i])
     # handles += l1, l2, l3
 # axs[0].
+    axs[i].grid(linestyle='--')
+    if i==1:
+        axs[i].set_title('Local Training', fontsize=13, pad=20)
+    axs[i].set_xlabel(titles[i])
 
-    axs[i].set_title('FedAvg')
-    axs[i].set_xlabel('Rounds')
-    axs[i].set_ylabel('Global Acc')
 
 # dict = [['Fashion-MNIST', 'LeNet5'],
 #              ['CIFAR-10', 'VGG-16'],
@@ -137,5 +160,6 @@ for i in range(3):
 
 # Label_Com = [r'$\alpha={}$ {} {}'.format(alphas[j], dict[i][0], dict[i][1]) for i in range(3) for j in range(3)]
 # axs[0].legend([], labels=Label_Com, loc='lower right', fontsize=2, ncol=2 )
+# fig.suptitle("Local Training", fontsize=13, weight='bold')
 # fig.savefig("imgs/local_acc.pdf", bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
-plt.show()
+fig.show()

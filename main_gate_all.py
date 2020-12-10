@@ -124,7 +124,7 @@ if __name__ == '__main__':
     image, target = next(iter(test_loader))
     writer.add_graph(net_glob, image.to(args.device))
 
-    gate_epochs = 100
+    gate_epochs = 200
 
     local_acc = np.zeros([args.num_users, args.epochs + gate_epochs + 1])
     total_acc = np.zeros([args.num_users, args.epochs + gate_epochs + 1])
