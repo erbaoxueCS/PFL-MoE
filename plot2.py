@@ -80,7 +80,7 @@ for i in range(3):
 
 axs[0].title('FedAvg')
 axs[0].xlabel('Rounds')
-axs[0].ylabel('Global Acc(%)')
+axs[0].ylabel('Global Test Acc(%)')
 
 dict = [['Fashion-MNIST', 'LeNet-5'],
              ['CIFAR-10', 'VGG-16'],
@@ -137,5 +137,5 @@ axins.set_ylim(ylim0, ylim1)
 axins.axes.set_visible('off')
 plt.xticks(visible=False)
 mark_inset(ax, axins, loc1=2, loc2=4, fc="none", ec='k', lw=0.5, ls='--')
-# plt.savefig("imgs/fed_acc.pdf", bbox_inches='tight', dpi=100, pad_inches=0.0)
-plt.show()
+plt.savefig("imgs/fed_acc.pdf", bbox_inches='tight', dpi=100, pad_inches=0.0)
+# plt.show()

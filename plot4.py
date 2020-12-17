@@ -101,6 +101,7 @@ print()
 plt.rcParams["axes.labelweight"] = "bold"
 plt.rcParams["axes.labelsize"] = "large"
 plt.rcParams["axes.titleweight"] = "bold"
+plt.rcParams["axes.titlesize"] = "large"
 plt.rcParams['axes.grid'] = True
 plt.grid(linestyle='-.')
 line = ['-.', '-', '--']
@@ -140,7 +141,9 @@ for i in range(3):
     if i == 2:
         p3 = plt.scatter([], [], marker='s', color=colors[0])
         p4 = plt.scatter([], [], marker='s', color=colors[1])
-        axs[i].legend(handles=[p3,p4], labels=['local test', 'global test'], loc='upper right', fontsize=11, bbox_to_anchor=(0, 0, 1.015, 1.11), ncol=2)
+        lgnd = axs[i].legend(handles=[p3,p4], labels=['local test acc', 'global test acc'], loc='lower right', fontsize=13, bbox_to_anchor=(0, 1, 1, 1), ncol=2)
+        lgnd.legendHandles[0]._sizes = [200]
+        lgnd.legendHandles[1]._sizes = [200]
 
     # l1, = axs[i].plot(range(0, epochs, strid), y[0][::strid], 'r' + line[i], linewidth=linewidth[i],)
     # l2, = axs[i].plot(range(0, epochs, strid), y[1][::strid], 'b' + line[i], linewidth=linewidth[i])
@@ -149,7 +152,7 @@ for i in range(3):
 # axs[0].
     axs[i].grid(linestyle='--')
     if i==1:
-        axs[i].set_title('Local Training', fontsize=13, pad=20)
+        axs[i].set_title('Stand-alone Training', fontsize=13, pad=20)
     axs[i].set_xlabel(titles[i])
 
 
@@ -160,6 +163,6 @@ for i in range(3):
 
 # Label_Com = [r'$\alpha={}$ {} {}'.format(alphas[j], dict[i][0], dict[i][1]) for i in range(3) for j in range(3)]
 # axs[0].legend([], labels=Label_Com, loc='lower right', fontsize=2, ncol=2 )
-# fig.suptitle("Local Training", fontsize=13, weight='bold')
-# fig.savefig("imgs/local_acc.pdf", bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
-fig.show()
+# fig.suptitle("Stand-alone Training", fontsize=13, weight='bold')
+fig.savefig("imgs/local_acc.pdf", bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
+# fig.show()

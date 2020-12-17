@@ -109,7 +109,7 @@ def draw(dataset, model, alpha, f):
     l1, = axs[0].plot(fed, per-fed, '.', c=color_dot)
     l2, = axs[0].plot(fed[r1], (struct-fed)[r1], 'r>')
 
-    axs[0].set_title('Local Test Acc of PFL',)
+    axs[0].set_title('PFL Local Acc',)
     axs[0].set_xlabel('FedAvg Local Acc(%)', )
     axs[0].set_ylabel('PFL Local Acc - FedAvg Local Acc(%)')
 
@@ -119,7 +119,7 @@ def draw(dataset, model, alpha, f):
     axs[0].axhline(y=0, color='b', linestyle='-.', lw=1)
 
     axs[1].axhline(y=0, color='b', linestyle='-.', lw=1)
-    axs[1].set_title('Global Test Acc of PFL')
+    axs[1].set_title('PFL Global Acc')
     axs[1].set_ylabel('PFL Global Acc - FedAvg Global Acc(%)')
 
     axs[1].set_xlabel('FedAvg Local Acc(%)', )
@@ -141,7 +141,7 @@ def draw(dataset, model, alpha, f):
     l3, = axs[2].plot(fed[r2], (gate-fed)[r2], 'g>')
     l1, = axs[2].plot(fed, per-fed, '.', c=color_dot)
     l2, = axs[2].plot(fed[r1], (gate-fed)[r1], 'r>')
-    axs[2].set_title('Local Test Acc of PFL')
+    axs[2].set_title('PFL Local Acc')
     axs[2].set_xlabel('FedAvg Local Acc(%)', )
     # axs[2].set_ylabel('Local Acc(PFL) - FedAvg Local Acc(%)')
 
@@ -151,7 +151,7 @@ def draw(dataset, model, alpha, f):
     axs[2].axhline(y=0, color='b', linestyle='-.', lw=1)
 
     axs[3].axhline(y=0, color='b', linestyle='-.', lw=1)
-    axs[3].set_title('Global Test Acc of PFL')
+    axs[3].set_title('PFL Global Acc')
     # axs[3].set_ylabel('Global Acc(PFL) - FedAvg Global Acc')
 
     axs[3].set_xlabel('FedAvg Local Acc(%)', )
@@ -185,8 +185,7 @@ def draw(dataset, model, alpha, f):
     # fig.show()
 
 
-if __name__ == '__main__':
-
+def save_all():
     alpha = 0.9
     # alpha = 2
     fs = [True, False]
@@ -199,3 +198,8 @@ if __name__ == '__main__':
     for f in fs:
         for d, m in dm:
             draw(d, m, alpha, f)
+
+
+if __name__ == '__main__':
+    save_all()
+    # draw('cifar', 'vgg', 0.9, True)
