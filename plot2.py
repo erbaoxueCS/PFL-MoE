@@ -58,10 +58,10 @@ file_names = [sorted(find_file(rootpwd, regex), reverse=True) for regex in regex
 print()
 
 
-plt.rcParams["axes.labelweight"] = "bold"
-plt.rcParams["axes.labelsize"] = "medium"
+# plt.rcParams["axes.labelweight"] = "bold"
+plt.rcParams["axes.labelsize"] = "large"
 plt.rcParams["axes.titleweight"] = "bold"
-plt.rcParams["axes.titlesize"] = "medium"
+plt.rcParams["axes.titlesize"] = "large"
 plt.rcParams['axes.grid'] = True
 plt.grid(linestyle='-.')
 
@@ -80,7 +80,7 @@ for i in range(3):
 
 axs[0].title('FedAvg')
 axs[0].xlabel('Rounds')
-axs[0].ylabel('Global Test Acc(%)')
+axs[0].ylabel('Test Acc(%)')
 
 dict = [['Fashion-MNIST', 'LeNet-5'],
              ['CIFAR-10', 'VGG-16'],

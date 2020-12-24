@@ -98,10 +98,12 @@ file_names_fed = [sorted(find_file(rootpwd_fed, regex), reverse=False) for regex
 print()
 
 
-plt.rcParams["axes.labelweight"] = "bold"
-plt.rcParams["axes.labelsize"] = "large"
+# plt.rcParams["axes.labelweight"] = "bold"
+plt.rcParams["axes.labelsize"] = 14
 plt.rcParams["axes.titleweight"] = "bold"
-plt.rcParams["axes.titlesize"] = "large"
+plt.rcParams["axes.titlesize"] = 16
+plt.rcParams['xtick.labelsize'] = 14
+plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['axes.grid'] = True
 plt.grid(linestyle='-.')
 line = ['-.', '-', '--']
@@ -121,7 +123,7 @@ for i in range(3):
     #     axs[i].axhline(line_y, xmin=j*(1/3)+blank, xmax=j*(1/3)+(1/3)-blank, color='b', linestyle='-', linewidth=0.8)
     linewidth = [1, 1, 1]
     labels = ['0.5', '0.5', '0.9', '0.9', '2.0', '2.0']
-    labels = [r'$\alpha='+i+"$" for i in labels]
+    labels = [ i for i in labels]
 
     bplot = axs[i].boxplot(y, labels=labels, patch_artist=True, notch=True, showmeans=True, )
     for patch, color in zip(bplot['boxes'], colors*3):
@@ -132,6 +134,8 @@ for i in range(3):
     # axs[2*i].axhlin`e(y=93, xmin=0., xmax=0.33, color='b', linestyle='-', lw=1)
     # l2 = axs[2*i+1].boxplot(y[1::2], labels=labels, notch=True, showmeans=True)
     axs[i].set_ylabel('test acc')
+    # axs[i].set_xticks(fontsize=20, minor=False)
+    axs[i].tick_params(axis='both', which='minor', labelsize=100)
     if i != 0:
         # axs[i].set_ylabel(False)
         # axs[i].y_label.set_visible(False)
@@ -141,7 +145,7 @@ for i in range(3):
     if i == 2:
         p3 = plt.scatter([], [], marker='s', color=colors[0])
         p4 = plt.scatter([], [], marker='s', color=colors[1])
-        lgnd = axs[i].legend(handles=[p3,p4], labels=['local test acc', 'global test acc'], loc='lower right', fontsize=13, bbox_to_anchor=(0, 1, 1, 1), ncol=2)
+        lgnd = axs[i].legend(handles=[p3, p4], labels=['local test acc', 'global test acc'], loc='lower right', fontsize=15, bbox_to_anchor=(0, 1, 1, 1), ncol=2)
         lgnd.legendHandles[0]._sizes = [200]
         lgnd.legendHandles[1]._sizes = [200]
 
@@ -152,7 +156,7 @@ for i in range(3):
 # axs[0].
     axs[i].grid(linestyle='--')
     if i==1:
-        axs[i].set_title('Stand-alone Training', fontsize=13, pad=20)
+        axs[i].set_title('Stand-alone Training', pad=20)
     axs[i].set_xlabel(titles[i])
 
 

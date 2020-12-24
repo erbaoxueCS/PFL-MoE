@@ -69,8 +69,6 @@ def draw(dataset, model, alpha, f):
         return maxdir
 
 
-
-
     pwd = os.path.join(rootpwd, find_file(rootdir1, regex))
     pwd2 = os.path.join(rootpwd, find_file(rootdir2, regex))
     fed, per, struct, gate, per2, g_fed, g_per, g_struct, g_gate, g_per2, = get3(pwd, pwd2, epochs)
@@ -82,9 +80,15 @@ def draw(dataset, model, alpha, f):
     # plt.plot(fed, per-fed, 'co')
 
     # plt.rcParams["font.weight"] = "bold"
-    plt.rcParams["axes.labelweight"] = "bold"
-    plt.rcParams["axes.labelsize"] = "large"
+    # plt.rcParams["axes.labelweight"] = "bold"
     plt.rcParams["axes.titleweight"] = "bold"
+    plt.rcParams["axes.titlesize"] = 19
+    plt.rcParams["axes.labelsize"] = 18
+    ylabelsize = 18
+    plt.rcParams['xtick.labelsize'] = 18
+    plt.rcParams['ytick.labelsize'] = 17
+    legendsize = 17
+    yposition = -0.3
     # color_dot = "#0000FF"
     color_dot = "c"
     # cm_g = plt.get_cmap("Greens")
@@ -109,18 +113,18 @@ def draw(dataset, model, alpha, f):
     l1, = axs[0].plot(fed, per-fed, '.', c=color_dot)
     l2, = axs[0].plot(fed[r1], (struct-fed)[r1], 'r>')
 
-    axs[0].set_title('PFL Local Acc',)
+    axs[0].set_title(r'$(a)$ PFLs Local Test Acc', y=yposition)
     axs[0].set_xlabel('FedAvg Local Acc(%)', )
-    axs[0].set_ylabel('PFL Local Acc - FedAvg Local Acc(%)')
+    axs[0].set_ylabel(r'(PFL $-$ FedAvg) Local Acc(%)', fontsize = ylabelsize)
 
     Label_Com0 = ['PFL-FB', 'PFL-MF(>PFL-FB)', 'PFL-MF(<PFL-FB)']
-    axs[0].legend(handles=[l1, l2, l3], labels=Label_Com0, loc='upper right')
+    axs[0].legend(handles=[l1, l2, l3], labels=Label_Com0, loc='upper right', fontsize=legendsize)
 
     axs[0].axhline(y=0, color='b', linestyle='-.', lw=1)
 
     axs[1].axhline(y=0, color='b', linestyle='-.', lw=1)
-    axs[1].set_title('PFL Global Acc')
-    axs[1].set_ylabel('PFL Global Acc - FedAvg Global Acc(%)')
+    axs[1].set_title(r'$(c)$ PFLs Global Test Acc',  y=yposition)
+    axs[1].set_ylabel(r'(PFL $-$ FedAvg) Global Acc(%)', fontsize = ylabelsize)
 
     axs[1].set_xlabel('FedAvg Local Acc(%)', )
 
@@ -134,24 +138,24 @@ def draw(dataset, model, alpha, f):
 
     Label_Com1 = ['PFL-FB', 'PFL-MF(>PFL-FB)', 'PFL-MF(<PFL-FB)']
     # handles1, labels1 = axs[1].get_legend_handles_labels()
-    axs[1].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right')
+    axs[1].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right', fontsize=legendsize)
     r1 = (gate > per)
     r2 = ~ r1
 
     l3, = axs[2].plot(fed[r2], (gate-fed)[r2], 'g>')
     l1, = axs[2].plot(fed, per-fed, '.', c=color_dot)
     l2, = axs[2].plot(fed[r1], (gate-fed)[r1], 'r>')
-    axs[2].set_title('PFL Local Acc')
+    axs[2].set_title(r'$(b)$ PFLs Local Test Acc', y=yposition)
     axs[2].set_xlabel('FedAvg Local Acc(%)', )
     # axs[2].set_ylabel('Local Acc(PFL) - FedAvg Local Acc(%)')
 
     Label_Com0 = ['PFL-FB', 'PFL-MFE(>PFL-FB)', 'PFL-MFE(<PFL-FB)']
-    axs[2].legend(handles=[l1, l2, l3], labels=Label_Com0, loc='upper right')
+    axs[2].legend(handles=[l1, l2, l3], labels=Label_Com0, loc='upper right', fontsize=legendsize)
 
     axs[2].axhline(y=0, color='b', linestyle='-.', lw=1)
 
     axs[3].axhline(y=0, color='b', linestyle='-.', lw=1)
-    axs[3].set_title('PFL Global Acc')
+    axs[3].set_title(r'$(d)$ PFLs Global Test Acc',  y=yposition)
     # axs[3].set_ylabel('Global Acc(PFL) - FedAvg Global Acc')
 
     axs[3].set_xlabel('FedAvg Local Acc(%)', )
@@ -167,7 +171,7 @@ def draw(dataset, model, alpha, f):
 
     Label_Com1 = ['PFL-FB', 'PFL-MFE(>PFL-FB)', 'PFL-MFE(<PFL-FB)']
     # handles1, labels1 = axs[1].get_legend_handles_labels()
-    axs[3].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right')
+    axs[3].legend(handles=[l1, l2, l3], labels=Label_Com1, loc='lower right', fontsize=legendsize)
 
 
     print("alpha={}, per={}".format(alpha, round(np.mean(per), 2)))
@@ -181,13 +185,13 @@ def draw(dataset, model, alpha, f):
 
     # fig.suptitle('LeNet, CIFAR-10, Non-IID α=0.9, 100 Users')
     assert alpha == 0.9 or alpha == 2
+    plt.show()
     fig.savefig("imgs/{}{}_{}{}.pdf".format('09' if alpha==0.9 else '2', dataset, model, '_f'if f else ''), bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
-    # fig.show()
 
 
 def save_all():
     alpha = 0.9
-    # alpha = 2
+    alpha = 2
     fs = [True, False]
     # dataset = 'cifar'
     # model = 'vgg'
@@ -202,4 +206,4 @@ def save_all():
 
 if __name__ == '__main__':
     save_all()
-    # draw('cifar', 'vgg', 0.9, True)
+    # draw('fmnist', 'lenet', 0.9, False)
