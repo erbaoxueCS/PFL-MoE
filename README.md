@@ -1,21 +1,28 @@
-# Federated Learning
+# PFL-MoE: Personalized Federated Learning Based on Mixture of Experts
 
-This is partly the reproduction of the paper of [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629)   
-Only experiments on MNIST and CIFAR10 (both IID and non-IID) is produced by far.
-
-Note: The scripts will be slow without the implementation of parallel computing. 
+In our experiments, we use two image recognition datasets to conduct model training: 
+Fashion-MNIST and CIFAR-10. With two network models trained, we have three combinations: Fashion-MNIST + LeNet-5, CIFAR-10 + LeNet-5, and CIFAR-10 + VGG-16. 
 
 ## Requirements
 python>=3.6  
 pytorch>=0.4
 
 ## Run
+$\alpha=[0.5, 0.9, 2.0]$ for each group of dataset+model
+Stand-alone training experiments:
+> python [main_local.py](main_local.py) --dataset fmnist --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.5
+> python [main_local.py](main_local.py) --dataset cifar --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.9
+> python [main_local.py](main_local.py) --dataset cifar --model vgg --epochs 100 --gpu 0 --num_users 100 --alpha 2.0
 
-The MLP and CNN models are produced by:
-> python [main_nn.py](main_nn.py)
+FedAvg:
+> python [main_fed.py](main_fed.py) --dataset fmnist --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.5
+> python [main_fed.py](main_fed.py) --dataset cifar --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.9
+> python [main_fed.py](main_fed.py) --dataset cifar --model vgg --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 2.0
 
-Federated learning with MLP and CNN is produced by:
-> python [main_fed.py](main_fed.py)
+PFL-FB:
+
+> python [main_]--dataset cifar --model lenet --epochs 10 --gpu 0 --num_users 100 --alpha 0.9
+
 
 See the arguments in [options.py](utils/options.py). 
 
