@@ -46,29 +46,38 @@ PFL-MFE:
 
 See the arguments in [options.py](utils/options.py). 
 ## Results
-### MNIST
-Results are shown in Table 1 and Table 2, with the parameters C=0.1, B=10, E=5.
+### 
+Each client has two types of tests, including local test and global test. 
 
-Table 1. results of 10 epochs training with the learning rate of 0.01
+Table 1. The average value of **local test** accuracy of all clients in three baselines and proposed algorithms. Bold means the best in all methods.
 
-| Model     | Acc. of IID | Acc. of Non-IID|
-| -----     | -----       | ----           |
-| FedAVG-MLP|  94.57%     | 70.44%         |
-| FedAVG-CNN|  96.59%     | 77.72%         |
+|                              | non-IID $\alpha$ | Stand-alone <br />Traing(%) | FedAvg(%) | PFL-FB(%) | PFL-MF(%) | PFL-MFE(%) |
+| :--------------------------: | :--------------: | :-------------------------: | :-------: | :-------: | --------: | :--------: |
+|                              |       0.5        |            84.87            |    90     |   92.84   |     92.85 | **92.89**  |
+| Fashion-MNIST & <br />LeNet5 |       0.9        |            82.23            |   90.31   |   91.84   | **92.02** |   92.01    |
+|                              |        2         |            78.63            |   90.5    |   90.47   | **90.97** |   90.93    |
+|                              |       0.5        |            65.58            |   68.92   | **77.46** |     75.49 |   77.23    |
+|   CIFAR-10 & <br />LeNet5    |       0.9        |            61.49            |   70.7    |   74.7    |      74.1 | **74.74**  |
+|                              |        2         |            55.8             |   72.69   |   72.5    |     73.24 | **73.44**  |
+|                              |       0.5        |            52.77            |   88.16   | **91.92** |     90.63 |   91.71    |
+|   CIFAR-10 &<br /> VGG-16    |       0.9        |            45.24            |   88.45   | **91.34** |     90.63 |   91.18    |
+|                              |        2         |            34.2             |   89.17   | **90.4**  |     90.15 |    90.4    |
 
-Table 2. results of 50 epochs training with the learning rate of 0.01
+Table 2. The average value of **global test** accuracy of all clients. Bold means the best in all personalization algorithms.
 
-| Model     | Acc. of IID | Acc. of Non-IID|
-| -----     | -----       | ----           |
-| FedAVG-MLP| 97.21%      | 93.03%         |
-| FedAVG-CNN| 98.60%      | 93.81%         |
+|                              | non-IID $\alpha$ | Stand-alone <br />Traing(%) | FedAvg(%) | PFL-FB(%) | PFL-MF(%) | PFL-MFE(%) |
+| :--------------------------: | :--------------: | :-------------------------: | :-------: | :-------: | :-------: | :--------: |
+|                              |       0.5        |            57.77            |    90     |   83.35   | **85.45** |    85.3    |
+| Fashion-MNIST & <br />LeNet5 |       0.9        |            65.28            |   90.31   |   85.91   | **87.69** |   87.67    |
+|                              |        2         |            71.06            |   90.5    |   87.77   | **89.37** |   89.18    |
+|                              |       0.5        |            28.89            |   68.92   |   54.28   | **62.33** |   58.27    |
+|   CIFAR-10 &<br /> LeNet5    |       0.9        |            32.1             |   70.7    |   59.93   | **65.78** |   64.13    |
+|                              |        2         |            35.32            |   72.69   |   66.06   | **69.79** |   69.78    |
+|                              |       0.5        |            21.53            |   88.16   |   82.39   | **85.81** |   84.05    |
+|   CIFAR-10 &<br /> VGG-16    |       0.9        |            22.45            |   88.45   |   82.62   | **88.15** |    87.9    |
+|                              |        2         |            21.27            |   89.17   |   88.77   | **89.3**  |  **89.3**  |
 
 
-## References
-McMahan, Brendan, Eider Moore, Daniel Ramage, Seth Hampson, and Blaise Aguera y Arcas. Communication-Efficient Learning of Deep Networks from Decentralized Data. In Artificial Intelligence and Statistics (AISTATS), 2017.
+## Acknowledgements
 
-Shaoxiong Ji, Shirui Pan, Guodong Long, Xue Li, Jing Jiang, and Zi Huang. Learning private neural language modeling with attentive aggregation. In the 2019 International Joint Conference on Neural Networks (IJCNN), 2019. [[Paper](https://arxiv.org/abs/1812.07108)] [[Code](https://github.com/shaoxiongji/fed-att)]
-
-Jing Jiang, Shaoxiong Ji, and Guodong Long. Decentralized knowledge acquisition for mobile internet applications. World Wide Web, 2020. [[Paper](https://link.springer.com/article/10.1007/s11280-019-00775-w)]
-
-
+The code developed in this repo was was adapted from https://github.com/shaoxiongji/federated-learning.
