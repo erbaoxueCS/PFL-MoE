@@ -8,7 +8,7 @@ python>=3.6
 pytorch>=0.4
 
 ## Run
-dataset+model: fmnist+lenet, cifar+lenet, cifar+vgg
+dataset+model: fmnist+lenet, cifar+lenet, cifar+vgg<br\>
 $\alpha=[0.5, 0.9, 2.0]$ for each group of dataset+model
 
 Local:
