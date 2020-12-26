@@ -101,7 +101,7 @@ print()
 # plt.rcParams["axes.labelweight"] = "bold"
 plt.rcParams["axes.labelsize"] = 14
 plt.rcParams["axes.titleweight"] = "bold"
-plt.rcParams["axes.titlesize"] = 16
+plt.rcParams["axes.titlesize"] = 17
 plt.rcParams['xtick.labelsize'] = 14
 plt.rcParams['ytick.labelsize'] = 14
 plt.rcParams['axes.grid'] = True
@@ -156,7 +156,7 @@ for i in range(3):
 # axs[0].
     axs[i].grid(linestyle='--')
     if i==1:
-        axs[i].set_title('Stand-alone Training', pad=20)
+        axs[i].set_title('Local', pad=20)
     axs[i].set_xlabel(titles[i])
 
 
@@ -169,4 +169,4 @@ for i in range(3):
 # axs[0].legend([], labels=Label_Com, loc='lower right', fontsize=2, ncol=2 )
 # fig.suptitle("Stand-alone Training", fontsize=13, weight='bold')
 fig.savefig("imgs/local_acc.pdf", bbox_inches='tight', dpi=fig.dpi, pad_inches=0.0)
-# fig.show()
+fig.show()

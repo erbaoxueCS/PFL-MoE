@@ -1,4 +1,8 @@
 runs/*
+save/
+plot*
+test.py
+
 
 # pycharm
 .idea/*
