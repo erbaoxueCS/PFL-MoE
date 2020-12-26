@@ -8,74 +8,206 @@ python>=3.6
 pytorch>=0.4
 
 ## Run
+dataset+model: fmnist+lenet, cifar+lenet, cifar+vgg
 $\alpha=[0.5, 0.9, 2.0]$ for each group of dataset+model
-Stand-alone training experiments:
+
+Local:
 > python [main_local.py](main_local.py) --dataset fmnist --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.5 
 
-> python [main_local.py](main_local.py) --dataset cifar --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.9
-
-> python [main_local.py](main_local.py) --dataset cifar --model vgg --epochs 100 --gpu 0 --num_users 100 --alpha 2.0
- 
 FedAvg:
 > python [main_fed.py](main_fed.py) --dataset fmnist --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.5
-
-> python [main_fed.py](main_fed.py) --dataset cifar --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.9
-
-> python [main_fed.py](main_fed.py) --dataset cifar --model vgg --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 2.0
 
 PFL-FB:
 > python [main_per_fb.py](main_per_fb.py) --dataset fmnist --model lenet --epochs 200 --gpu 0 --num_users 100 --alpha 0.5
 
-> python [main_per_fb.py](main_per_fb.py) --dataset cifar --model lenet --epochs 200 --gpu 0 --num_users 100 --alpha 0.9
-
-> python [main_per_fb.py](main_per_fb.py) --dataset cifar --model vgg --epochs 200 --gpu 0 --num_users 100 --alpha 2.0
-
 PFL-MF:
 > python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5
 
-> python [main_gate.py](main_gate.py) --dataset cifar --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.9
-
-> python [main_gate.py](main_gate.py) --dataset cifar --model vgg --epochs 200 --num_users 100 --gpu 1 --alpha 2.0
-
 PFL-MFE:
 > python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5 --struct
-
-> python [main_gate.py](main_gate.py) --dataset cifar --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.9 --struct
-
-> python [main_gate.py](main_gate.py) --dataset cifar --model vgg --epochs 200 --num_users 100 --gpu 1 --alpha 2.0 --struct
 
 See the arguments in [options.py](utils/options.py). 
 ## Results
 ### 
 Each client has two types of tests, including local test and global test. 
 
-Table 1. The average value of **local test** accuracy of all clients in three baselines and proposed algorithms. Bold means the best in all methods.
+Table 1. The average value of **local test** accuracy of all clients in three baselines and proposed algorithms. 
 
-|                              | non-IID $\alpha$ | Stand-alone <br />Traing(%) | FedAvg(%) | PFL-FB(%) | PFL-MF(%) | PFL-MFE(%) |
-| :--------------------------: | :--------------: | :-------------------------: | :-------: | :-------: | --------: | :--------: |
-|                              |       0.5        |            84.87            |    90     |   92.84   |     92.85 | **92.89**  |
-| Fashion-MNIST & <br />LeNet5 |       0.9        |            82.23            |   90.31   |   91.84   | **92.02** |   92.01    |
-|                              |        2         |            78.63            |   90.5    |   90.47   | **90.97** |   90.93    |
-|                              |       0.5        |            65.58            |   68.92   | **77.46** |     75.49 |   77.23    |
-|   CIFAR-10 & <br />LeNet5    |       0.9        |            61.49            |   70.7    |   74.7    |      74.1 | **74.74**  |
-|                              |        2         |            55.8             |   72.69   |   72.5    |     73.24 | **73.44**  |
-|                              |       0.5        |            52.77            |   88.16   | **91.92** |     90.63 |   91.71    |
-|   CIFAR-10 &<br /> VGG-16    |       0.9        |            45.24            |   88.45   | **91.34** |     90.63 |   91.18    |
-|                              |        2         |            34.2             |   89.17   | **90.4**  |     90.15 |    90.4    |
+<table>
+   <tr>
+      <td></td>
+      <td>non-IID</td>
+      <td>Local(%)</td>
+      <td>FedAvg(%)</td>
+      <td>PFL-FB(%)</td>
+      <td>PFL-MF(%)</td>
+      <td>PFL-MFE(%)</td>
+   </tr>
+   <tr>
+      <td rowspan="3">Fashion-MNIST & LeNet5</td><!--rowspan="3"纵向合并三个单元格-->
+      <td>0.5</td>
+      <td>84.87</td>
+      <td>90</td>
+      <td>92.84</td>
+      <td>92.85</td>
+      <td>92.89</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>82.23</td>
+      <td>90.31</td>
+      <td>91.84</td>
+      <td>92.02</td>
+      <td>92.01</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>78.63</td>
+      <td>90.5</td>
+      <td>90.47</td>
+      <td>90.97</td>
+      <td>90.93</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & LeNet5</td>
+      <td>0.5</td>
+      <td>65.58</td>
+      <td>68.92</td>
+      <td>77.46</td>
+      <td>75.49</td>
+      <td>77.23</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>61.49</td>
+      <td>70.7</td>
+      <td>74.7</td>
+      <td>74.1</td>
+      <td>74.74</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>55.8</td>
+      <td>72.69</td>
+      <td>72.5</td>
+      <td>73.24</td>
+      <td>73.44</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & VGG-16</td>
+      <td>0.5</td>
+      <td>52.77</td>
+      <td>88.16</td>
+      <td>91.92</td>
+      <td>90.63</td>
+      <td>91.71</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>45.24</td>
+      <td>88.45</td>
+      <td>91.34</td>
+      <td>90.63</td>
+      <td>91.18</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>34.2</td>
+      <td>89.17</td>
+      <td>90.4</td>
+      <td>90.15</td>
+      <td>90.4</td>
+   </tr>
+</table>
 
-Table 2. The average value of **global test** accuracy of all clients. Bold means the best in all personalization algorithms.
+Table 2. The average value of **global test** accuracy of all clients. 
 
-|                              | non-IID $\alpha$ | Stand-alone <br />Traing(%) | FedAvg(%) | PFL-FB(%) | PFL-MF(%) | PFL-MFE(%) |
-| :--------------------------: | :--------------: | :-------------------------: | :-------: | :-------: | :-------: | :--------: |
-|                              |       0.5        |            57.77            |    90     |   83.35   | **85.45** |    85.3    |
-| Fashion-MNIST & <br />LeNet5 |       0.9        |            65.28            |   90.31   |   85.91   | **87.69** |   87.67    |
-|                              |        2         |            71.06            |   90.5    |   87.77   | **89.37** |   89.18    |
-|                              |       0.5        |            28.89            |   68.92   |   54.28   | **62.33** |   58.27    |
-|   CIFAR-10 &<br /> LeNet5    |       0.9        |            32.1             |   70.7    |   59.93   | **65.78** |   64.13    |
-|                              |        2         |            35.32            |   72.69   |   66.06   | **69.79** |   69.78    |
-|                              |       0.5        |            21.53            |   88.16   |   82.39   | **85.81** |   84.05    |
-|   CIFAR-10 &<br /> VGG-16    |       0.9        |            22.45            |   88.45   |   82.62   | **88.15** |    87.9    |
-|                              |        2         |            21.27            |   89.17   |   88.77   | **89.3**  |  **89.3**  |
+<table>
+   <tr>
+      <td></td>
+      <td>non-IID </td>
+      <td>Local(%)</td>
+      <td>FedAvg(%)</td>
+      <td>PFL-FB(%)</td>
+      <td>PFL-MF(%)</td>
+      <td>PFL-MFE(%)</td>
+   </tr>
+   <tr>
+      <td rowspan="3">Fashion-MNIST & LeNet5</td>
+      <td>0.5</td>
+      <td>57.77</td>
+      <td>90</td>
+      <td>83.35</td>
+      <td>85.45</td>
+      <td>85.3</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>65.28</td>
+      <td>90.31</td>
+      <td>85.91</td>
+      <td>87.69</td>
+      <td>87.67</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>71.06</td>
+      <td>90.5</td>
+      <td>87.77</td>
+      <td>89.37</td>
+      <td>89.18</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & LeNet5</td>
+      <td>0.5</td>
+      <td>28.89</td>
+      <td>68.92</td>
+      <td>54.28</td>
+      <td>62.33</td>
+      <td>58.27</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>32.1</td>
+      <td>70.7</td>
+      <td>59.93</td>
+      <td>65.78</td>
+      <td>64.13</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>35.32</td>
+      <td>72.69</td>
+      <td>66.06</td>
+      <td>69.79</td>
+      <td>69.78</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & VGG-16</td>
+      <td>0.5</td>
+      <td>21.53</td>
+      <td>88.16</td>
+      <td>82.39</td>
+      <td>85.81</td>
+      <td>84.05</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>22.45</td>
+      <td>88.45</td>
+      <td>82.62</td>
+      <td>88.15</td>
+      <td>87.9</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>21.27</td>
+      <td>89.17</td>
+      <td>88.77</td>
+      <td>89.3</td>
+      <td>89.3</td>
+   </tr>
+</table>
 
 
 ## Acknowledgements
