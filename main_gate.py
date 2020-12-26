@@ -4,12 +4,11 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import datasets, transforms
 from utils.options import args_parser
-from models.Nets import MLP, CNNMnist, CNNCifar, CNNGate, GateResNet18, ResNet18, gate_vgg16
+from models.Nets import CNNGate, gate_vgg16
 from utils.util import setup_seed, add_scalar
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
@@ -17,7 +16,6 @@ from utils.sampling import cifar_noniid
 import numpy as np
 from models.Update import DatasetSplit
 from models.test import user_test, user_per_test
-from copy import deepcopy
 
 
 if __name__ == '__main__':
@@ -40,13 +38,10 @@ if __name__ == '__main__':
     writer = SummaryWriter(logdir)
     writer2 = SummaryWriter(logdir2)
 
-
     # load dataset and split users
     train_loader, test_loader, class_weight = 1, 1, 1
 
     save_dataset_path = f'./data/{args.dataset}_non_iid{args.alpha}_user{args.num_users}_fast_data'
-    # global_weight = torch.load('./save/nn_cifar_cnn_100_Oct.13_19.45.20')['model']
-    # global_weight = torch.load('./save/exp/fed/cifar_resnet_1000_C0.1_iidFalse_0.9_user100_Nov.22_14.57.55_bst')['model']
     # global_weight = torch.load('./save/exp/fed/cifar_resnet_1000_C0.1_iidFalse_2.0_user100_Nov.28_01.41.16_bst')['model']
     global_weight = torch.load(
         f'./save/exp/fed/{args.dataset}_{args.model}_1000_C0.1_iidFalse_{args.alpha}_user{args.num_users}_bst')[
@@ -115,8 +110,6 @@ if __name__ == '__main__':
     # build model
     if args.model == 'lenet' and (args.dataset == 'cifar' or args.dataset == 'fmnist'):
         net_glob = CNNGate(args=args).to(args.device)
-    elif args.model == 'resnet' and args.dataset == 'cifar':
-        net_glob = GateResNet18().to(args.device)
     elif args.model == 'vgg' and args.dataset == 'cifar':
         net_glob = gate_vgg16(args=args).to(args.device)
     else:
@@ -152,13 +145,8 @@ if __name__ == '__main__':
         net_glob.load_state_dict(global_weight, False)
 
         if args.model == 'lenet':
-            # net_glob.pfc1.load_state_dict({'weight': global_weight['fc1.weight'], 'bias': global_weight['fc1.bias']})
-            # net_glob.pfc2.load_state_dict({'weight': global_weight['fc2.weight'], 'bias': global_weight['fc2.bias']})
-            # net_glob.pfc3.load_state_dict({'weight': global_weight['fc3.weight'], 'bias': global_weight['fc3.bias']})
             keys_ind = ['fc1.weight', 'fc1.bias', 'fc2.weight', 'fc2.bias', 'fc3.weight', 'fc3.bias']
             net_glob.load_state_dict({'p' + k: global_weight[k] for k in keys_ind}, strict=False)
-        elif args.model == 'resnet':
-            net_glob.plinear.load_state_dict({'weight': global_weight['linear.weight'], 'bias': global_weight['linear.bias']})
         elif args.model == 'vgg':
             keys_ind = ['classifier.1.weight', 'classifier.1.bias', 'classifier.4.weight', 'classifier.4.bias', 'classifier.6.weight', 'classifier.6.bias']
             net_glob.load_state_dict({'p' + k: global_weight[k] for k in keys_ind}, strict=False)
@@ -171,15 +159,6 @@ if __name__ == '__main__':
             layer_set = {'p' + k[:k.rindex('.')] for k in keys_ind}
             optimizer = optim.SGD([{'params': getattr(net_glob, l).parameters()} for l in layer_set],
                                   lr=0.001, momentum=0.9, weight_decay=5e-4)
-        elif args.model == 'resnet':
-            num = 0
-            for parame in net_glob.parameters():
-                if num < 60:
-                    parame.requires_grad = False
-                num += 1
-            optimizer = optim.SGD([
-                {'params': net_glob.plinear.parameters()}
-            ], lr=0.001, momentum=0.9, weight_decay=5e-4)
         elif args.model == 'vgg':
             layer_set = {k[len('pclassifier'):k.rindex('.')] for k in keys_ind}
             optimizer = optim.SGD([{'params': net_glob.pclassifier.parameters()}],
@@ -212,11 +191,6 @@ if __name__ == '__main__':
                 if args.model == 'lenet':
                     for layer in layer_set:
                         writer.add_histogram(f"user_{user_num}/{layer}/weight", getattr(net_glob, layer).weight, epoch)
-                    # writer.add_histogram(f"user_{user_num}/pfc1/weight", net_glob.pfc1.weight, epoch)
-                    # writer.add_histogram(f"user_{user_num}/pfc2/weight", net_glob.pfc2.weight, epoch)
-                    # writer.add_histogram(f"user_{user_num}/pfc3/weight", net_glob.pfc3.weight, epoch)
-                elif args.model == 'resnet':
-                    writer.add_histogram(f"user_{user_num}/plinear/weight", net_glob.plinear.weight, epoch)
                 elif args.model == 'vgg':
                     for layer in layer_set:
                         writer.add_histogram(f"user_{user_num}/pclassifier.{layer}/weight", getattr(net_glob.pclassifier, layer).weight, epoch)

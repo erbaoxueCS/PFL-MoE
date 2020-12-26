@@ -10,14 +10,12 @@ import torch
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
 from models.Update import LocalUpdate
-from models.Nets import MLP, vgg16, CNNMnist, CNNCifar, ResNet18
+from models.Nets import vgg16, CNNCifar
 from models.Fed import FedAvg
 from models.test import test_img
 from utils.util import setup_seed
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
-import matplotlib
-matplotlib.use('Agg')
 
 
 if __name__ == '__main__':
@@ -31,7 +29,6 @@ if __name__ == '__main__':
     TAG = 'exp/fed/{}_{}_{}_C{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.frac, args.iid,
                                                            args.alpha, args.num_users, current_time)
     # TAG = f'alpha_{alpha}/data_distribution'
-
     logdir = f'runs/{TAG}' if not args.debug else f'runs2/{TAG}'
     writer = SummaryWriter(logdir)
 
@@ -58,7 +55,6 @@ if __name__ == '__main__':
         ])
         dataset_train = datasets.CIFAR10('../data/cifar', train=True, download=True, transform=transform_train)
         dataset_test = datasets.CIFAR10('../data/cifar', train=False, download=True, transform=transform_test)
-
     elif args.dataset == 'fmnist':
         dataset_train = datasets.FashionMNIST('../data/fmnist/', train=True, download=True,
                                        transform=transforms.Compose([
@@ -92,22 +88,11 @@ if __name__ == '__main__':
                                  np.array(dataset_train.targets)[v],
                                  bins=np.arange(11), global_step=k)
 
-    img_size = dataset_train[0][0].shape
-
     # build model
     if args.model == 'lenet' and (args.dataset == 'cifar' or args.dataset == 'fmnist'):
         net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'lenet' and args.dataset == 'mnist':
-        net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'vgg' and args.dataset == 'cifar':
         net_glob = vgg16().to(args.device)
-    elif args.model == 'mlp':
-        len_in = 1
-        for x in img_size:
-            len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
-    elif args.model == 'resnet' and args.dataset == 'cifar':
-        net_glob = ResNet18().to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -161,7 +146,6 @@ if __name__ == '__main__':
             test_best_acc = test_acc
             save_path = f'./save2/{TAG}_bst' if args.debug else f'./save/{TAG}_bst'
             torch.save(save_info, save_path)
-
 
     # plot loss curve
     # plt.figure()

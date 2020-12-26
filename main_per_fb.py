@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import torch.optim as optim
 from torchvision import datasets, transforms
 from utils.options import args_parser
-from models.Nets import MLP, CNNMnist, CNNCifar, CNNGate
+from models.Nets import CNNGate
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from utils.sampling import cifar_noniid

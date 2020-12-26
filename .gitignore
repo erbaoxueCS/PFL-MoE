@@ -2,7 +2,9 @@ runs/*
 save/
 plot*
 test.py
-
+main__gate.py
+_config.yml
+main_gate_single.py
 
 # pycharm
 .idea/*

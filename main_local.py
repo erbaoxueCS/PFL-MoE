@@ -1,30 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Python version: 3.6
-
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import copy
 import numpy as np
 from torchvision import datasets, transforms
 import torch
 import torch.nn
 import torch.nn.functional as F
-
 from utils.sampling import mnist_iid, mnist_noniid, cifar_iid, cifar_noniid
 from utils.options import args_parser
-from models.Update import LocalUpdate
-from models.Nets import MLP, CNNMnist, CNNCifar, ResNet18, vgg16
-from models.Fed import FedAvg
-from models.test import test_img
+from models.Nets import CNNCifar, vgg16
 from utils.util import setup_seed
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from models.Update import DatasetSplit
-import random
 from models.test import local_test
 from utils.util import add_scalar
 
@@ -68,8 +59,8 @@ if __name__ == '__main__':
 
     # log
     current_time = datetime.now().strftime('%b.%d_%H.%M.%S')
-    TAG = 'exp/local/{}_{}_{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.iid,
-                                                             args.alpha, args.num_users, current_time)
+    TAG = 'exp/local/{}_{}_{}_iid{}_{}_user{}_{}'.format(args.dataset, args.model, args.epochs, args.iid, args.alpha,
+                                                         args.num_users, current_time)
     logdir = f'runs/{TAG}' if not args.debug else f'runs2/{TAG}'
     writer = SummaryWriter(logdir)
 
@@ -136,17 +127,8 @@ if __name__ == '__main__':
     # build model
     if args.model == 'lenet' and (args.dataset == 'cifar' or args.dataset == 'fmnist'):
         net_glob = CNNCifar(args=args).to(args.device)
-    elif args.model == 'lenet' and args.dataset == 'mnist':
-        net_glob = CNNMnist(args=args).to(args.device)
     elif args.model == 'vgg' and args.dataset == 'cifar':
         net_glob = vgg16().to(args.device)
-    elif args.model == 'mlp':
-        len_in = 1
-        for x in img_size:
-            len_in *= x
-        net_glob = MLP(dim_in=len_in, dim_hidden=200, dim_out=args.num_classes).to(args.device)
-    elif args.model == 'resnet':
-        net_glob = ResNet18().to(args.device)
     else:
         exit('Error: unrecognized model')
     print(net_glob)
@@ -216,12 +198,11 @@ if __name__ == '__main__':
         writer.add_scalar('test/global/test_acc', total_acc[epoch], epoch)
         writer.add_scalar('test/local/test_acc', local_acc[epoch], epoch)
     writer.close()
-
-    # plot loss curve
-    plt.figure()
-    plt.title('local train acc', fontsize=20)  # 标题，并设定字号大小
-    labels = ['local', 'total']
-    plt.boxplot([local_acc_final, total_acc_final], labels=labels, notch=True, showmeans=True)
-    plt.ylabel('test acc')
-    plt.savefig(f'{logdir}/local_train_acc.png')
-
+    #
+    # # plot loss curve
+    # plt.figure()
+    # plt.title('local train acc', fontsize=20)  # 标题，并设定字号大小
+    # labels = ['local', 'total']
+    # plt.boxplot([local_acc_final, total_acc_final], labels=labels, notch=True, showmeans=True)
+    # plt.ylabel('test acc')
+    # plt.savefig(f'{logdir}/local_train_acc.png')
