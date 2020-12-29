@@ -12,16 +12,16 @@ dataset+model: fmnist+lenet, cifar+lenet, cifar+vgg<br>
 $\alpha=[0.5, 0.9, 2.0]$ for each group of dataset+model
 
 Local:
-> python [main_local.py](main_local.py) --dataset fmnist --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.5 
+> `python [main_local.py](main_local.py) --dataset fmnist --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.5` 
 
 FedAvg: 
-> python [main_fed.py](main_fed.py) --dataset fmnist --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.5
+> `python [main_fed.py](main_fed.py) --dataset fmnist --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.5`
 
 PFL-FB + PFL-MF:
-> python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5
+> `python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5`
 
 PFL-FB + PFL-MFE:
-> python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5 --struct
+> `python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5 --struct`
 
 See the arguments in [options.py](utils/options.py). 
 ## Results
@@ -205,6 +205,9 @@ Table 2. The average value of **global test** accuracy of all clients.
       <td>89.3</td>
    </tr>
 </table>
+
+Fig 1. Fashion-MNIST + LeNet-5, $\alpha=0.9$, 100 clients. The global test accuracy and local test accuracy of all client of PFL-FB, PFL-MF, and PFL-MFE algorithms. All x-axis are FedAvg local test accuracy of each client (can be regarded as client index). Each point represents a test accuracy comparison between a PFL algorithm and FedAvg for a particular client.
+![Fashion-MNIST_LeNet](https://github.com/guobbin/PFL-MoE/blob/master/imgs/09fmnist_lenet.pdf)
 
 
 ## Acknowledgements
