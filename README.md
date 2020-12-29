@@ -1,3 +1,12 @@
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
 # PFL-MoE: Personalized Federated Learning Based on Mixture of Experts
 
 In our experiments, we use two image recognition datasets to conduct model training: 
