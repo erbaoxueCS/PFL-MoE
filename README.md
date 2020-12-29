@@ -47,14 +47,14 @@ Table 1. The average value of **local test** accuracy of all clients in three ba
       <td>90</td>
       <td>92.84</td>
       <td>92.85</td>
-      <td>92.89</td>
+      <td style="font-weight:bold">92.89</td>
    </tr>
    <tr>
       <td>0.9</td>
       <td>82.23</td>
       <td>90.31</td>
       <td>91.84</td>
-      <td>92.02</td>
+      <td style="font-weight:bold">92.02</td>
       <td>92.01</td>
    </tr>
    <tr>
@@ -62,7 +62,7 @@ Table 1. The average value of **local test** accuracy of all clients in three ba
       <td>78.63</td>
       <td>90.5</td>
       <td>90.47</td>
-      <td>90.97</td>
+      <td style="font-weight:bold">90.97</td>
       <td>90.93</td>
    </tr>
    <tr>
