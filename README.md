@@ -1,11 +1,3 @@
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-
-\\(\alpha=1\\)
-
-$$x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}$$
-
-\\(x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}\\)
-
 # PFL-MoE: Personalized Federated Learning Based on Mixture of Experts
 
 In our experiments, we use two image recognition datasets to conduct model training: 
@@ -224,7 +216,7 @@ Fig 2. CIFAR-10 + LeNet-5, $\alpha=0.9$.
 
 Fig 3. CIFAR-10 + VGG-16, $\alpha=2.0$.
 
-![cifar_vgg_2.0](https://github.com/guobbin/PFL-MoE/blob/master/imgs/2cifar_vgg.pdf)
+![cifar_vgg_2.0](./imgs/2cifar_vgg.pdf)
 
 ## Acknowledgements
 
