@@ -117,6 +117,7 @@ Table 1. The average value of **local test** accuracy of all clients in three ba
    </tr>
 </table>
 
+
 Table 2. The average value of **global test** accuracy of all clients. 
 
 <table>
@@ -221,3 +222,90 @@ Fig 3. CIFAR-10 + VGG-16, $\alpha=2.0$.
 ## Acknowledgements
 
 The code developed in this repo was was adapted from https://github.com/shaoxiongji/federated-learning.
+
+<table>
+   <tr>
+      <td></td>
+      <td>non-IID</td>
+      <td>Local(%)</td>
+      <td>FedAvg(%)</td>
+      <td>PFL-FB(%)</td>
+      <td>PFL-MF(%)</td>
+      <td>PFL-MFE(%)</td>
+   </tr>
+   <tr>
+      <td rowspan="3">Fashion-MNIST & LeNet5</td><!--rowspan="3"纵向合并三个单元格-->
+      <td>0.5</td>
+      <td>84.87</td>
+      <td>90</td>
+      <td>92.84</td>
+      <td>92.85</td>
+      <td style="font-weight:bold">92.89</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>82.23</td>
+      <td>90.31</td>
+      <td>91.84</td>
+      <td style="font-weight:bold">92.02</td>
+      <td>92.01</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>78.63</td>
+      <td>90.5</td>
+      <td>90.47</td>
+      <td style="font-weight:bold">90.97</td>
+      <td>90.93</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & LeNet5</td>
+      <td>0.5</td>
+      <td>65.58</td>
+      <td>68.92</td>
+      <td>77.46</td>
+      <td>75.49</td>
+      <td>77.23</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>61.49</td>
+      <td>70.7</td>
+      <td>74.7</td>
+      <td>74.1</td>
+      <td>74.74</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>55.8</td>
+      <td>72.69</td>
+      <td>72.5</td>
+      <td>73.24</td>
+      <td>73.44</td>
+   </tr>
+   <tr>
+      <td rowspan="3">CIFAR-10 & VGG-16</td>
+      <td>0.5</td>
+      <td>52.77</td>
+      <td>88.16</td>
+      <td>91.92</td>
+      <td>90.63</td>
+      <td>91.71</td>
+   </tr>
+   <tr>
+      <td>0.9</td>
+      <td>45.24</td>
+      <td>88.45</td>
+      <td>91.34</td>
+      <td>90.63</td>
+      <td>91.18</td>
+   </tr>
+   <tr>
+      <td>2</td>
+      <td>34.2</td>
+      <td>89.17</td>
+      <td>90.4</td>
+      <td>90.15</td>
+      <td>90.4</td>
+   </tr>
+</table>
