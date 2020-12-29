@@ -207,7 +207,8 @@ Table 2. The average value of **global test** accuracy of all clients.
 </table>
 
 Fig 1. Fashion-MNIST + LeNet-5, $\alpha=0.9$, 100 clients. The global test accuracy and local test accuracy of all client of PFL-FB, PFL-MF, and PFL-MFE algorithms. All x-axis are FedAvg local test accuracy of each client (can be regarded as client index). Each point represents a test accuracy comparison between a PFL algorithm and FedAvg for a particular client.
-![Fashion-MNIST_LeNet](https://github.com/guobbin/PFL-MoE/blob/master/imgs/09fmnist_lenet.pdf)
+
+![fmnist_lenet_0.9](https://github.com/guobbin/PFL-MoE/blob/master/imgs/09fmnist_lenet.pdf)
 
 
 ## Acknowledgements
