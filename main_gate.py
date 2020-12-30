@@ -15,7 +15,7 @@ from datetime import datetime
 from utils.sampling import cifar_noniid
 import numpy as np
 from models.Update import DatasetSplit
-from models.test import user_test, user_per_test
+from models.Test import user_test, user_per_test
 
 
 if __name__ == '__main__':

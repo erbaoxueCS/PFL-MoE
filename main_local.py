@@ -16,7 +16,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader
 import torch.optim as optim
 from models.Update import DatasetSplit
-from models.test import local_test
+from models.Test import local_test
 from utils.util import add_scalar
 
 

@@ -12,7 +12,7 @@ from utils.options import args_parser
 from models.Update import LocalUpdate
 from models.Nets import vgg16, CNNCifar
 from models.Fed import FedAvg
-from models.test import test_img
+from models.Test import test_img
 from utils.util import setup_seed
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter

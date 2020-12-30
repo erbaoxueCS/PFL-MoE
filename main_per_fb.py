@@ -12,7 +12,7 @@ from datetime import datetime
 from utils.sampling import cifar_noniid
 from models.Update import DatasetSplit
 from utils.util import *
-from models.test import user_per_test
+from models.Test import user_per_test
 import copy
 
 

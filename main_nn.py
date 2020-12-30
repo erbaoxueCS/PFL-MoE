@@ -12,7 +12,7 @@ from models.Nets import CNNCifar, vgg16
 from utils.util import setup_seed
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
-from models.test import test
+from models.Test import test
 
 
 if __name__ == '__main__':
