@@ -220,4 +220,4 @@ Fig 3. CIFAR-10 + VGG-16, $\alpha=2.0$.
 
 ## Acknowledgements
 
-The code developed in this repo was was adapted from https://github.com/shaoxiongji/federated-learning.
+Acknowledgments give to [shaoxiongji](https://github.com/shaoxiongji)
