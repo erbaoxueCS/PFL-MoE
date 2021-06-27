@@ -13,12 +13,16 @@ $\alpha=[0.5, 0.9, 2.0]$ for each group of dataset+model
 
 Local:
 > python [main_local.py](main_local.py) --dataset fmnist --model lenet --epochs 100 --gpu 0 --num_users 100 --alpha 0.5
+
 FedAvg: 
 > python [main_fed.py](main_fed.py) --dataset fmnist --model lenet --epochs 1000 --gpu 0 --lr 0.01 --num_users 100 --frac 0.1 --alpha 0.5
+
 PFL-FB + PFL-MF:
 > python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5
+
 PFL-FB + PFL-MFE:
 > python [main_gate.py](main_gate.py) --dataset fmnist --model lenet --epochs 200 --num_users 100 --gpu 1 --alpha 0.5 --struct
+
 See the arguments in [options.py](utils/options.py). 
 ## Results
 ### 
