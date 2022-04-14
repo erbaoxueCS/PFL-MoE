@@ -17,6 +17,9 @@ from utils.util import setup_seed
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 
+dt = datetime.now()
+ts = datetime.timestamp(dt)
+print(ts)
 
 if __name__ == '__main__':
     # parse args
@@ -128,6 +131,12 @@ if __name__ == '__main__':
         # print loss
         loss_avg = sum(loss_locals) / len(loss_locals)
         print('Round {:3d}, Train loss {:.3f}'.format(iter, loss_avg))
+
+        dt_epoch = datetime.now()
+        ts_epoch = datetime.timestamp(dt_epoch)
+        print("Timestamp: ", ts_epoch)
+        print("Time past since start running: ", ts_epoch - ts)
+
         loss_train.append(loss_avg)
         writer.add_scalar('train_loss', loss_avg, iter)
         test_acc, test_loss = test_img(net_glob, dataset_test, args)
@@ -138,11 +147,12 @@ if __name__ == '__main__':
             "model": net_glob.state_dict(),
             "epoch": iter
         }
-        # save model weights
+        #save model weights
         if (iter+1) % 500 == 0:
             save_path = f'./save2/{TAG}_{iter+1}es' if args.debug else f'./save/{TAG}_{iter+1}es'
             torch.save(save_info, save_path)
-        if iter > 100 and test_acc > test_best_acc:
+        # if iter > 100 and test_acc > test_best_acc:
+        if  test_acc > test_best_acc:
             test_best_acc = test_acc
             save_path = f'./save2/{TAG}_bst' if args.debug else f'./save/{TAG}_bst'
             torch.save(save_info, save_path)
@@ -159,4 +169,10 @@ if __name__ == '__main__':
     acc_test, loss_test = test_img(net_glob, dataset_test, args)
     print("Training accuracy: {:.2f}".format(acc_train))
     print("Testing accuracy: {:.2f}".format(acc_test))
+
+    dt_last = datetime.now()
+    ts_last = datetime.timestamp(dt_last)
+    print("Timestamp:", ts_last)
+    print("Time past since start running: ", ts_last - ts)
+
     writer.close()
